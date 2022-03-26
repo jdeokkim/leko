@@ -26,6 +26,7 @@ _COLOR_BEGIN := $(shell tput setaf 13)
 _COLOR_END := $(shell tput sgr0)
 
 RAYLIB_PATH ?= $(PROJECT_PATH)/lib/raylib
+RAYGUI_PATH ?= $(PROJECT_PATH)/lib/raygui
 
 # TODO: Change the values of `PROJECT_NAME` and `PROJECT_FULL_NAME`
 PROJECT_NAME := leko
@@ -38,7 +39,8 @@ BINARY_PATH := $(PROJECT_PATH)/bin
 
 INCLUDE_PATH := \
 	$(PROJECT_PATH)/include \
-	$(RAYLIB_PATH)/src
+	$(RAYLIB_PATH)/src      \
+	$(RAYGUI_PATH)/src
 
 LIBRARY_PATH := \
 	$(PROJECT_PATH)/lib \
