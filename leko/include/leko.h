@@ -19,6 +19,7 @@
 #define LEKO_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "raylib.h"
 
@@ -34,6 +35,13 @@
 
 /* | 자료형 정의... | */
 
+/* 게임 리소스의 종류를 나타내는 열거형. */
+typedef enum GameAssetType {
+    GAT_MUSIC,
+    GAT_SOUND,
+    GAT_TEXTURE
+} GameAssetType;
+
 /* 게임의 현재 화면을 나타내는 열거형. */
 typedef enum GameScreen {
     GSC_INIT,     // 초기 화면
@@ -42,6 +50,18 @@ typedef enum GameScreen {
     GSC_SELECT,   // 레벨 선택 화면
     GSC_GAME      // 게임 플레이 화면
 } GameScreen;
+
+/* 게임의 리소스를 나타내는 구조체. */
+typedef struct GameAsset {
+    int id;
+    GameAssetType type;
+    const char *path;
+    union {
+        Music music;
+        Sound sound;
+        Texture2D texture;
+    } data;
+} GameAsset;
 
 /* | `screen` 모듈 함수... | */
 
@@ -52,15 +72,6 @@ void LoadScreen(GameScreen screen);
 void UpdateScreen(void);
 
 /* | `loader` 모듈 함수... | */
-
-/* ID가 `id`인 `Music` 리소스를 반환한다. */
-Music *GetMusicResource(int id);
-
-/* ID가 `id`인 `Sound` 리소스를 반환한다. */
-Sound *GetSoundResource(int id);
-
-/* ID가 `id`인 `Texture2D` 리소스를 반환한다. */
-Texture2D *GetTextureResource(int id);
 
 /* 로딩 화면을 초기화한다. */
 void InitLoadingScreen(void);
