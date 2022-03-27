@@ -55,7 +55,6 @@ SOURCES := \
 	$(SOURCE_PATH)/game.c    \
 	$(SOURCE_PATH)/levels.c  \
 	$(SOURCE_PATH)/loader.c  \
-	$(SOURCE_PATH)/loading.c \
 	$(SOURCE_PATH)/screen.c  \
 	$(SOURCE_PATH)/select.c  \
 	$(SOURCE_PATH)/title.c   \

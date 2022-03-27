@@ -15,31 +15,75 @@
     along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <stdlib.h>
+
 #include "leko.h"
+
+/* | `loader` 모듈 매크로 정의... | */
+
+#define MUSIC_LIST_LENGTH    1
+#define SOUND_LIST_LENGTH    1
+#define TEXTURE_LIST_LENGTH  1
+
+/* | `loader` 모듈 상수... | */
+
+const char *music_paths[MUSIC_LIST_LENGTH] = {
+    /* TODO: ... */
+};
+
+const char *sound_paths[SOUND_LIST_LENGTH] = {
+    /* TODO: ... */
+};
+
+const char *texture_paths[TEXTURE_LIST_LENGTH] = {
+    "res/images/background.png"
+};
+
+/* | `loader` 모듈 변수... | */
+
+static Music music_list[MUSIC_LIST_LENGTH];
+static Sound sound_list[SOUND_LIST_LENGTH];
+static Texture2D texture_list[TEXTURE_LIST_LENGTH];
+
+static bool initialized = false;
+
+static int result = 0;
 
 /* | `loader` 모듈 함수... | */
 
-/* 게임 리소스를 메모리에 불러온다. */
-void LoadResources(void) {
-    /* TODO: ... */
-}
-
-/* 게임 리소스에 할당된 메모리를 해제한다. */
-void UnloadResources(void) {
-    /* TODO: ... */
-}
-
 /* ID가 `id`인 `Music` 리소스를 반환한다. */
-Music GetMusicResource(int id) {
-    /* TODO: ... */
+Music *GetMusicResource(int id) {
+    if (!initialized) return NULL;
+
+    return (id >= 0 && id <= MUSIC_LIST_LENGTH - 1) ? &music_list[id] : NULL;
 }
 
 /* ID가 `id`인 `Sound` 리소스를 반환한다. */
-Sound GetSoundResource(int id) {
-    /* TODO: ... */
+Sound *GetSoundResource(int id) {
+    if (!initialized) return NULL;
+
+    return (id >= 0 && id <= SOUND_LIST_LENGTH - 1) ? &sound_list[id] : NULL;
 }
 
 /* ID가 `id`인 `Texture2D` 리소스를 반환한다. */
-Texture2D GetTextureResource(int id) {
+Texture2D *GetTextureResource(int id) {
+    if (!initialized) return NULL;
+    
+    return (id >= 0 && id <= TEXTURE_LIST_LENGTH - 1) ? &texture_list[id] : NULL;
+}
+
+/* 로딩 화면을 초기화한다. */
+void InitLoadingScreen(void) {
     /* TODO: ... */
+}
+
+/* 로딩 화면을 업데이트한다. */
+void UpdateLoadingScreen(void) {
+    // TODO: ...
+    ClearBackground(GREEN);
+}
+
+/* 로딩 화면을 종료한다. */
+int FinishLoadingScreen(void) {
+    return result;
 }

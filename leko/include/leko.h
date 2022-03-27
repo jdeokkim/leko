@@ -18,6 +18,8 @@
 #ifndef LEKO_H
 #define LEKO_H
 
+#include <stdbool.h>
+
 #include "raylib.h"
 
 /* | 매크로 정의... | */
@@ -51,22 +53,14 @@ void UpdateScreen(void);
 
 /* | `loader` 모듈 함수... | */
 
-/* 게임 리소스를 메모리에 불러온다. */
-void LoadResources(void);
-
-/* 게임 리소스에 할당된 메모리를 해제한다. */
-void UnloadResources(void);
-
 /* ID가 `id`인 `Music` 리소스를 반환한다. */
-Music GetMusicResource(int id);
+Music *GetMusicResource(int id);
 
 /* ID가 `id`인 `Sound` 리소스를 반환한다. */
-Sound GetSoundResource(int id);
+Sound *GetSoundResource(int id);
 
 /* ID가 `id`인 `Texture2D` 리소스를 반환한다. */
-Texture2D GetTextureResource(int id);
-
-/* | `loading` 모듈 함수... | */
+Texture2D *GetTextureResource(int id);
 
 /* 로딩 화면을 초기화한다. */
 void InitLoadingScreen(void);
