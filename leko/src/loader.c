@@ -15,4 +15,31 @@
     along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-/* TODO: ... */
+#include "leko.h"
+
+/* | `loader` 모듈 함수... | */
+
+/* 게임 리소스를 메모리에 불러온다. */
+void LoadResources(void) {
+    /* TODO: ... */
+}
+
+/* 게임 리소스에 할당된 메모리를 해제한다. */
+void UnloadResources(void) {
+    /* TODO: ... */
+}
+
+/* ID가 `id`인 `Music` 리소스를 반환한다. */
+Music GetMusicResource(int id) {
+    /* TODO: ... */
+}
+
+/* ID가 `id`인 `Sound` 리소스를 반환한다. */
+Sound GetSoundResource(int id) {
+    /* TODO: ... */
+}
+
+/* ID가 `id`인 `Texture2D` 리소스를 반환한다. */
+Texture2D GetTextureResource(int id) {
+    /* TODO: ... */
+}

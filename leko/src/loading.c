@@ -17,24 +17,24 @@
 
 #include "leko.h"
 
-/* | `game` 모듈 변수... | */
+/* | `loading` 모듈 변수... | */
 
 static int result = 0;
 
-/* | `game` 모듈 함수... | */
+/* | `loading` 모듈 함수... | */
 
-/* 게임 플레이 화면을 초기화한다. */
-void InitGameScreen(void) {
+/* 로딩 화면을 초기화한다. */
+void InitLoadingScreen(void) {
     /* TODO: ... */
 }
 
-/* 게임 플레이 화면을 업데이트한다. */
-void UpdateGameScreen(void) {
+/* 로딩 화면을 업데이트한다. */
+void UpdateLoadingScreen(void) {
     // TODO: ...
-    ClearBackground(BLUE);
+    ClearBackground(GREEN);
 }
 
-/* 게임 플레이 화면을 종료한다. */
-int FinishGameScreen(void) {
+/* 로딩 화면을 종료한다. */
+int FinishLoadingScreen(void) {
     return result;
 }

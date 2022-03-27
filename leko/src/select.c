@@ -15,4 +15,26 @@
     along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-/* TODO: ... */
+#include "leko.h"
+
+/* | `select` 모듈 변수... | */
+
+static int result = 0;
+
+/* | `select` 모듈 함수... | */
+
+/* 레벨 선택 화면을 초기화한다. */
+void InitSelectScreen(void) {
+    /* TODO: ... */
+}
+
+/* 레벨 선택 화면을 업데이트한다. */
+void UpdateSelectScreen(void) {
+    // TODO: ...
+    ClearBackground(VIOLET);
+}
+
+/* 레벨 선택 화면을 종료한다. */
+int FinishSelectScreen(void) {
+    return result;
+}

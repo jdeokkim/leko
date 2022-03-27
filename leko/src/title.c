@@ -15,4 +15,26 @@
     along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-/* TODO: ... */
+#include "leko.h"
+
+/* | `title` 모듈 변수... | */
+
+static int result = 0;
+
+/* | `title` 모듈 함수... | */
+
+/* 타이틀 화면을 초기화한다. */
+void InitTitleScreen(void) {
+    /* TODO: ... */
+}
+
+/* 타이틀 화면을 업데이트한다. */
+void UpdateTitleScreen(void) {
+    // TODO: ...
+    ClearBackground(YELLOW);
+}
+
+/* 타이틀 화면을 종료한다. */
+int FinishTitleScreen(void) {
+    return result;
+}

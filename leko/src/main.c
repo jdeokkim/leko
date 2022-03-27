@@ -18,5 +18,21 @@
 #include "leko.h"
 
 int main(void) {
+    SetExitKey(KEY_NULL);
+    SetTargetFPS(TARGET_FPS);
+
+    InitAudioDevice();
+
+    {
+        InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, LEKO_NAME);
+
+        while (!WindowShouldClose())
+            UpdateScreen();
+
+        CloseWindow();
+    }
+
+    CloseAudioDevice();
+
     return 0;
 }
