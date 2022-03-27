@@ -51,7 +51,15 @@ SOURCE_PATH := $(PROJECT_PATH)/src
 
 INCLUDE_PATH += $(SOURCE_PATH)/external
 
-SOURCES := $(SOURCE_PATH)/main.c
+SOURCES := \
+	$(SOURCE_PATH)/game.c   \
+	$(SOURCE_PATH)/init.c   \
+	$(SOURCE_PATH)/levels.c \
+	$(SOURCE_PATH)/select.c \
+	$(SOURCE_PATH)/title.c  \
+	$(SOURCE_PATH)/ui.c     \
+	$(SOURCE_PATH)/main.c
+
 OBJECTS := $(SOURCES:.c=.o)
 
 # TODO: Edit the line below if you want another name for your executable
