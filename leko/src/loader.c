@@ -22,6 +22,9 @@
 
 /* | `loader` 모듈 매크로 정의... | */
 
+#define PRELOAD_FONT_FIRST_CHAR  0x20
+#define PRELOAD_FONT_SIZE        32
+
 #define PROGRESS_BAR_COLOR_01    ((Color) { 52, 36, 244, 255 })
 #define PROGRESS_BAR_COLOR_02    ((Color) { 58, 64, 216, 255 })
 #define PROGRESS_BAR_COLOR_03    ((Color) { 64, 96, 187, 255 })
@@ -32,8 +35,8 @@
 /* | `loader` 모듈 변수... | */
 
 static GameAsset assets[] = {
-    { .type = GAT_FONT,    .path = "res/fonts/neodgm-32pt.fnt" },
-    { .type = GAT_FONT,    .path = "res/fonts/neodgm-16pt.fnt" },
+    { .type = GAT_FONT,    .path = "res/fonts/neodgm/neodgm-32pt.fnt" },
+    { .type = GAT_FONT,    .path = "res/fonts/neodgm/neodgm-16pt.fnt" },
     { .type = GAT_TEXTURE, .path = "res/images/background.png" },
     { .type = GAT_SOUND,   .path = "res/sounds/dragged.wav"    },
     { .type = GAT_SOUND,   .path = "res/sounds/marked.wav"     }
@@ -159,9 +162,21 @@ void InitLoadingScreen(void) {
         PRELOAD_03_LENGTH
     );
 
+    Image img_neodgm_min_32pt = LoadImageFromMemory(
+        ".png", 
+        _preload_04_png, 
+        PRELOAD_04_LENGTH
+    );
+
     tx_copyright_message = LoadTextureFromImage(img_copyright_message);
     tx_error_message = LoadTextureFromImage(img_error_message);
     tx_loading_message = LoadTextureFromImage(img_loading_message);
+
+    fnt_neodgm_min_32pt = LoadFontFromImage(
+        img_neodgm_min_32pt, 
+        MAGENTA, 
+        PRELOAD_FONT_FIRST_CHAR
+    );
 
     UnloadImage(img_copyright_message);
     UnloadImage(img_error_message);
@@ -209,6 +224,32 @@ void UpdateLoadingScreen(void) {
             WHITE
         );
 
+        const char *path_text = TextFormat(
+            "-> %s (%d / %d)", 
+            assets[asset_index].path,
+            asset_index + 1,
+            max_asset_count
+        );
+
+        const Vector2 font_dimensions = MeasureTextEx(
+            fnt_neodgm_min_32pt,
+            path_text,
+            PRELOAD_FONT_SIZE,
+            2.0f
+        );
+
+        DrawTextEx(
+            fnt_neodgm_min_32pt,
+            path_text,
+            (Vector2) {
+                0.5f * (SCREEN_WIDTH - font_dimensions.x),
+                v_loading_message.y + 80.0f
+            },
+            PRELOAD_FONT_SIZE,
+            2.0f,
+            WHITE
+        );
+
         {
             if (asset_index < max_asset_count - 1) {
                 bool check = LoadGameAsset(asset_index);
@@ -221,7 +262,7 @@ void UpdateLoadingScreen(void) {
 
                 asset_index++;
             } else {
-                if (frame_counter >= TARGET_FPS) {
+                if (frame_counter >= 8.0f * TARGET_FPS) {
                     frame_counter = 0;
                     result = 1;
 
@@ -250,6 +291,8 @@ int FinishLoadingScreen(void) {
         UnloadTexture(tx_copyright_message);
         UnloadTexture(tx_error_message);
         UnloadTexture(tx_loading_message);
+
+        UnloadFont(fnt_neodgm_min_32pt);
     }
 
     return result;
