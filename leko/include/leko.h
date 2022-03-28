@@ -37,6 +37,7 @@
 
 /* 게임 리소스의 종류를 나타내는 열거형. */
 typedef enum GameAssetType {
+    GAT_FONT,
     GAT_MUSIC,
     GAT_SOUND,
     GAT_TEXTURE
@@ -53,10 +54,11 @@ typedef enum GameScreen {
 
 /* 게임의 리소스를 나타내는 구조체. */
 typedef struct GameAsset {
-    int id;
+    bool loaded;
     GameAssetType type;
     const char *path;
     union {
+        Font font;
         Music music;
         Sound sound;
         Texture2D texture;
@@ -72,6 +74,15 @@ void LoadScreen(GameScreen screen);
 void UpdateScreen(void);
 
 /* | `loader` 모듈 함수... | */
+
+/* `index + 1`번째 게임 리소스의 데이터를 메모리로 불러온다.*/
+bool LoadGameAsset(int index);
+
+/* `index + 1`번째 게임 리소스의 데이터에 할당된 메모리를 해제한다.*/
+bool UnloadGameAsset(int index);
+
+/* `index + 1`번째 게임 리소스 데이터를 반환한다. */
+GameAsset *GetGameAsset(int index);
 
 /* 로딩 화면을 초기화한다. */
 void InitLoadingScreen(void);
