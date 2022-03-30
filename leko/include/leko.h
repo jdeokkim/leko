@@ -65,6 +65,38 @@ typedef struct GameAsset {
     } data;
 } GameAsset;
 
+/* `char` 데이터 2개를 나타내는 구조체. */
+typedef struct CPair { unsigned char x, y; } CPair;
+
+/* 블록의 종류를 나타내는 열거형. */
+typedef enum BlockType {
+    BLT_EMPTY,     // 빈 공간
+    BLT_COLOR_01,  // 일반 블록, 첫 번째 색상
+    BLT_COLOR_02,  // 일반 블록, 두 번째 색상
+    BLT_COLOR_03,  // 일반 블록, 세 번째 색상
+    BLT_COLOR_04,  // 일반 블록, 네 번째 색상
+    BLT_COLOR_05,  // 일반 블록, 다섯 번째 색상
+    BLT_COLOR_06,  // 일반 블록, 여섯 번째 색상
+    BLT_COLOR_07,  // 일반 블록, 일곱 번째 색상
+    BLT_WALL       // 특수 블록, 벽
+} BlockType;
+
+/* 블록의 상태를 나타내는 열거형. */
+typedef enum BlockState {
+    BLS_NORMAL,   // 기본 상태
+    BLS_MARKED,   // 하나 이상의 블록과 매치
+    BLS_DRAGGED,  // 마우스로 드래그 중
+    BLS_FALLING   // 아래로 떨어지는 중
+} BlockState;
+
+/* 블록을 나타내는 구조체. */
+typedef struct Block {
+    BlockType type;    // 블록의 종류
+    BlockState state;  // 블록의 상태
+    Vector2 position;  // 블록의 위치
+    float counter;     // 시간 측정용 변수
+} Block;
+
 /* | `screen` 모듈 함수... | */
 
 /* 게임의 현재 화면을 `screen`에 대응하는 화면으로 변경한다. */
@@ -75,15 +107,6 @@ void UpdateScreen(void);
 
 /* | `loader` 모듈 함수... | */
 
-/* `index + 1`번째 게임 리소스의 데이터를 메모리로 불러온다.*/
-bool LoadGameAsset(int index);
-
-/* `index + 1`번째 게임 리소스의 데이터에 할당된 메모리를 해제한다.*/
-bool UnloadGameAsset(int index);
-
-/* `index + 1`번째 게임 리소스 데이터를 반환한다. */
-GameAsset *GetGameAsset(int index);
-
 /* 로딩 화면을 초기화한다. */
 void InitLoadingScreen(void);
 
@@ -92,6 +115,15 @@ void UpdateLoadingScreen(void);
 
 /* 로딩 화면을 종료한다. */
 int FinishLoadingScreen(void);
+
+/* `index + 1`번째 게임 리소스의 데이터를 메모리로 불러온다.*/
+bool LoadGameAsset(int index);
+
+/* `index + 1`번째 게임 리소스의 데이터에 할당된 메모리를 해제한다.*/
+bool UnloadGameAsset(int index);
+
+/* `index + 1`번째 게임 리소스 데이터를 반환한다. */
+GameAsset *GetGameAsset(int index);
 
 /* | `title` 모듈 함수... | */
 

@@ -64,10 +64,17 @@ void UpdateScreen(void) {
             break;
 
         case GSC_LOADING:
+            /*
             UpdateLoadingScreen();
 
             if (FinishLoadingScreen())
                 LoadScreen(GSC_TITLE);
+            */
+
+            UpdateLoadingScreen();
+
+            if (FinishLoadingScreen())
+                LoadScreen(GSC_GAME);
 
             break;
 

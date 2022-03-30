@@ -35,11 +35,12 @@
 /* | `loader` 모듈 변수... | */
 
 static GameAsset assets[] = {
-    { .type = GAT_FONT,    .path = "res/fonts/neodgm/neodgm-32pt.fnt" },
     { .type = GAT_FONT,    .path = "res/fonts/neodgm/neodgm-16pt.fnt" },
-    { .type = GAT_TEXTURE, .path = "res/images/background.png" },
-    { .type = GAT_SOUND,   .path = "res/sounds/dragged.wav"    },
-    { .type = GAT_SOUND,   .path = "res/sounds/marked.wav"     }
+    { .type = GAT_FONT,    .path = "res/fonts/neodgm/neodgm-32pt.fnt" },
+    { .type = GAT_TEXTURE, .path = "res/images/blocks.png"            },
+    { .type = GAT_TEXTURE, .path = "res/images/frame.png"             },
+    { .type = GAT_SOUND,   .path = "res/sounds/dragged.wav"           },
+    { .type = GAT_SOUND,   .path = "res/sounds/marked.wav"            }
 };
 
 static Rectangle progress_bar_inner_bounds = { .width = 764.0f, .height = 48.0f };
@@ -61,86 +62,6 @@ static void UpdateErrorScreen(void);
 
 /* 리소스 파일 로딩 바를 업데이트한다. */
 static void UpdateProgressBar(void);
-
-/* `index + 1`번째 게임 리소스의 데이터를 메모리로 불러온다.*/
-bool LoadGameAsset(int index) {
-    if (index < 0 || index > max_asset_count - 1) return false;
-
-    switch (assets[index].type) {
-        case GAT_FONT:
-            assets[index].data.font = LoadFont(assets[index].path);
-
-            break;
-
-        case GAT_MUSIC:
-            assets[index].data.music = LoadMusicStream(assets[index].path);
-
-            if (assets[index].data.music.ctxData == NULL) 
-                return false;
-
-            break;
-
-        case GAT_SOUND:
-            assets[index].data.sound = LoadSound(assets[index].path);
-
-            if (assets[index].data.sound.frameCount == 0) 
-                return false;
-
-            break;
-
-        case GAT_TEXTURE:
-            assets[index].data.texture = LoadTexture(assets[index].path);
-
-            if (assets[index].data.texture.id == 0) 
-                return false;
-
-            break;
-
-        default:
-            break;
-    }
-
-    return (assets[index].loaded = true);
-}
-
-/* `index + 1`번째 게임 리소스의 데이터에 할당된 메모리를 해제한다.*/
-bool UnloadGameAsset(int index) {
-    if (index < 0 || index > max_asset_count - 1) return false;
-
-    switch (assets[index].type) {
-        case GAT_FONT:
-            UnloadFont(assets[index].data.font);
-
-            break;
-
-        case GAT_MUSIC:
-            UnloadMusicStream(assets[index].data.music);
-
-            break;
-
-        case GAT_SOUND:
-            UnloadSound(assets[index].data.sound);
-
-            break;
-
-        case GAT_TEXTURE:
-            UnloadTexture(assets[index].data.texture);
-
-            break;
-
-        default:
-            break;
-    }
-
-    return true;
-}
-
-/* `index + 1`번째 게임 리소스 데이터를 반환한다. */
-GameAsset *GetGameAsset(int index) {
-    return (index >= 0 && index <= max_asset_count - 1)
-        ? (GameAsset *) &assets[index] 
-        : NULL;
-}
 
 /* 로딩 화면을 초기화한다. */
 void InitLoadingScreen(void) {
@@ -262,7 +183,7 @@ void UpdateLoadingScreen(void) {
 
                 asset_index++;
             } else {
-                if (frame_counter >= 8.0f * TARGET_FPS) {
+                if (frame_counter >= TARGET_FPS) {
                     frame_counter = 0;
                     result = 1;
 
@@ -296,6 +217,86 @@ int FinishLoadingScreen(void) {
     }
 
     return result;
+}
+
+/* `index + 1`번째 게임 리소스의 데이터를 메모리로 불러온다.*/
+bool LoadGameAsset(int index) {
+    if (index < 0 || index > max_asset_count - 1) return false;
+
+    switch (assets[index].type) {
+        case GAT_FONT:
+            assets[index].data.font = LoadFont(assets[index].path);
+
+            break;
+
+        case GAT_MUSIC:
+            assets[index].data.music = LoadMusicStream(assets[index].path);
+
+            if (assets[index].data.music.ctxData == NULL) 
+                return false;
+
+            break;
+
+        case GAT_SOUND:
+            assets[index].data.sound = LoadSound(assets[index].path);
+
+            if (assets[index].data.sound.frameCount == 0) 
+                return false;
+
+            break;
+
+        case GAT_TEXTURE:
+            assets[index].data.texture = LoadTexture(assets[index].path);
+
+            if (assets[index].data.texture.id == 0) 
+                return false;
+
+            break;
+
+        default:
+            break;
+    }
+
+    return (assets[index].loaded = true);
+}
+
+/* `index + 1`번째 게임 리소스의 데이터에 할당된 메모리를 해제한다.*/
+bool UnloadGameAsset(int index) {
+    if (index < 0 || index > max_asset_count - 1) return false;
+
+    switch (assets[index].type) {
+        case GAT_FONT:
+            UnloadFont(assets[index].data.font);
+
+            break;
+
+        case GAT_MUSIC:
+            UnloadMusicStream(assets[index].data.music);
+
+            break;
+
+        case GAT_SOUND:
+            UnloadSound(assets[index].data.sound);
+
+            break;
+
+        case GAT_TEXTURE:
+            UnloadTexture(assets[index].data.texture);
+
+            break;
+
+        default:
+            break;
+    }
+
+    return true;
+}
+
+/* `index + 1`번째 게임 리소스 데이터를 반환한다. */
+GameAsset *GetGameAsset(int index) {
+    return (index >= 0 && index <= max_asset_count - 1)
+        ? (GameAsset *) &assets[index] 
+        : NULL;
 }
 
 /* 리소스 파일 관련 오류 화면을 업데이트한다. */
