@@ -24,6 +24,8 @@
 #define WIDTH_IN_BLOCKS   15
 #define HEIGHT_IN_BLOCKS  14
 
+#define GRAVITY_CONSTANT  160.0f
+
 /* | `game` 모듈 상수... | */
 
 const float INVERSE_BLOCK_SIZE = 1.0f / BLOCK_SIZE;
@@ -46,14 +48,23 @@ static int result = 0;
 
 /* | `game` 모듈 함수... | */
 
-/* 레벨 위치 `position`에 종류가 `type`인 블록을 추가한다. */
-static void AddBlock(CPair position, BlockType type);
+/* 레벨 위치 `indexes`에 종류가 `type`인 블록을 추가한다. */
+static void AddBlock(CPair indexes, BlockType type);
 
 /* 게임 플레이 화면에 블록을 그린다. */
 static void DrawBlock(Block *block);
 
+/* 게임 화면의 위치 `v`에 있는 블록을 반환한다. */
+static Block *GetBlockAt(Vector2 v);
+
+/* 블록 `block`의 화면 기준 경계 범위를 반환한다. */
+static Rectangle GetBlockBounds(Block *block);
+
 /* 블록 `block`의 위치를 업데이트한다. */
 static void UpdateBlock(Block *block);
+
+/* 블록 `block`이 마우스로 이동 가능한지 확인한다. */
+static bool CanBeDragged(Block *block);
 
 /* 게임 화면의 위치 `v`를 레벨 위치로 변환한다. */
 static CPair GetGridCoordinates(Vector2 v);
@@ -65,6 +76,10 @@ static void DrawLevel(void);
 void InitGameScreen(void) {
     ast_blocks = GetGameAsset(2);
     ast_frame = GetGameAsset(3);
+
+    AddBlock((CPair) { 7, 0 }, BLT_COLOR_01);
+    AddBlock((CPair) { 6, 0 }, BLT_COLOR_02);
+    AddBlock((CPair) { 7, 7 }, BLT_WALL);
 }
 
 /* 게임 플레이 화면을 업데이트한다. */
@@ -85,18 +100,19 @@ int FinishGameScreen(void) {
     return result;
 }
 
-/* 레벨 위치 `position`에 종류가 `type`인 블록을 추가한다. */
-static void AddBlock(CPair position, BlockType type) {
-    if (type == BLT_EMPTY || position.x > WIDTH_IN_BLOCKS - 1 
-        || position.y > HEIGHT_IN_BLOCKS - 1) return;
+/* 레벨 위치 `indexes`에 종류가 `type`인 블록을 추가한다. */
+static void AddBlock(CPair indexes, BlockType type) {
+    if (type == BLT_EMPTY || indexes.x > WIDTH_IN_BLOCKS - 1 
+        || indexes.y > HEIGHT_IN_BLOCKS - 1) return;
 
-    blocks[position.y][position.x] = (Block) {
+    blocks[indexes.y][indexes.x] = (Block) {
         .type = type,
         .state = BLS_NORMAL,
-        .position = (Vector2) {
-            GRID_RECTANGLE.x + (position.x * BLOCK_SIZE),
-            GRID_RECTANGLE.y + (position.y * BLOCK_SIZE)
-        }
+        .position = {
+            GRID_RECTANGLE.x + (indexes.x * BLOCK_SIZE),
+            GRID_RECTANGLE.y + (indexes.y * BLOCK_SIZE)
+        },
+        .indexes = indexes
     };
 }
 
@@ -117,9 +133,92 @@ static void DrawBlock(Block *block) {
     );
 }
 
+/* 게임 화면의 위치 `v`에 있는 블록을 반환한다. */
+static Block *GetBlockAt(Vector2 v) {
+    CPair indexes = GetGridCoordinates(v);
+
+    Block *block = &blocks[indexes.y][indexes.x];
+
+    return CheckCollisionPointRec(
+        GetMousePosition(), 
+        GetBlockBounds(block)
+    ) ? block : NULL;
+}
+
+/* 블록 `block`의 화면 기준 경계 범위를 반환한다. */
+static Rectangle GetBlockBounds(Block *block) {
+    return (Rectangle) {
+        .x = block->position.x,
+        .y = block->position.y,
+        BLOCK_SIZE,
+        BLOCK_SIZE
+    };
+}
+
 /* 블록 `block`의 위치를 업데이트한다. */
 static void UpdateBlock(Block *block) {
-    /* TODO: ... */
+    if (block == NULL || block->type < BLT_COLOR_01
+        || block->type > BLT_COLOR_07) return;
+
+    block->indexes = GetGridCoordinates(block->position);
+
+    switch (block->state) {
+        case BLS_NORMAL:
+            if (block->indexes.y < HEIGHT_IN_BLOCKS - 1) {
+                Block *bottom = &blocks[block->indexes.y + 1][block->indexes.x];
+
+                if (bottom->type == BLT_EMPTY) {
+                    block->state = BLS_FALLING;
+
+                    break;
+                }
+            }
+
+            break;
+        
+        case BLS_MARKED:
+            /* TODO: ... */
+
+            break;
+
+        case BLS_DRAGGED:
+            /* TODO: ... */
+
+            break;
+
+        case BLS_FALLING:
+            if (block->indexes.y < HEIGHT_IN_BLOCKS - 1) {
+                Block *bottom = &blocks[block->indexes.y + 1][block->indexes.x];
+
+                if (bottom->type != BLT_EMPTY) {
+                    block->state = BLS_NORMAL;
+
+                    block->velocity.y = 0.0f;
+                    block->position.y = GRID_RECTANGLE.y + (block->indexes.y * BLOCK_SIZE);
+                }
+
+                const float dt = GetFrameTime();
+
+                block->velocity.y += GRAVITY_CONSTANT * dt;
+                block->position.y += block->velocity.y * dt;
+            } else {
+                block->state = BLS_NORMAL;
+
+                block->velocity.y = 0.0f;
+                block->position.y = GRID_RECTANGLE.y + (block->indexes.y * BLOCK_SIZE);
+            }
+
+            break;
+
+        default:
+            break;
+    }
+}
+
+/* 블록 `block`이 마우스로 이동 가능한지 확인한다. */
+static bool CanBeDragged(Block *block) {
+    return (block != NULL && block->type >= BLT_COLOR_01 
+        && block->type <= BLT_COLOR_07 && block->state == BLS_NORMAL);
 }
 
 /* 게임 화면의 위치 `v`를 레벨 위치로 변환한다. */
@@ -143,8 +242,9 @@ static void DrawLevel(void) {
     for (int y = 0; y < HEIGHT_IN_BLOCKS; y++) {
         for (int x = 0; x < WIDTH_IN_BLOCKS; x++) {
             UpdateBlock(&blocks[y][x]);
-            
-            DrawBlock(&blocks[y][x]);
+
+            if (blocks[y][x].state != BLS_MARKED)
+                DrawBlock(&blocks[y][x]);
         }
     }
 }

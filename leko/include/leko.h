@@ -93,7 +93,9 @@ typedef enum BlockState {
 typedef struct Block {
     BlockType type;    // 블록의 종류
     BlockState state;  // 블록의 상태
-    Vector2 position;  // 블록의 위치
+    Vector2 position;  // 블록의 화면 기준 위치
+    Vector2 velocity;  // 블록의 화면 기준 속도
+    CPair indexes;     // 블록의 레벨 기준 위치
     float counter;     // 시간 측정용 변수
 } Block;
 
