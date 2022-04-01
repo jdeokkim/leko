@@ -59,6 +59,8 @@ void UpdateScreen(void) {
 
     switch (current_screen) {
         case GSC_INIT:
+            // SetExitKey(KEY_NULL);
+
             LoadScreen(GSC_LOADING);
 
             break;

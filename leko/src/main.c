@@ -18,7 +18,6 @@
 #include "leko.h"
 
 int main(void) {
-    SetExitKey(KEY_NULL);
     SetTargetFPS(TARGET_FPS);
 
     InitAudioDevice();
