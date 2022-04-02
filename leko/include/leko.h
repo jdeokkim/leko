@@ -26,7 +26,7 @@
 /* | 매크로 정의... | */
 
 #define LEKO_NAME               "c-krit/leko"
-#define LEKO_VERSION            "0.0.1"
+#define LEKO_VERSION            "0.1.0"
 
 #define TARGET_FPS              60
 

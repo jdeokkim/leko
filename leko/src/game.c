@@ -24,6 +24,7 @@
 /* | `game` 모듈 매크로 정의... | */
 
 #define GRAVITY_CONSTANT     600.0f
+
 #define MAX_ADJACENTS_COUNT  4
 
 /* | `game` 모듈 자료형 정의... | */
@@ -33,11 +34,6 @@ typedef struct CPair { unsigned char x, y; } CPair;
 
 /* | `game` 모듈 상수... | */
 
-const float FADE_DURATION = 0.25f;
-
-const float INVERSE_BLOCK_SIZE = 1.0f / BLOCK_SIZE;
-const float INVERSE_FADE_DURATION = 1.0f / FADE_DURATION;
-
 const Rectangle LEVEL_RECTANGLE = {
     .x = 260.0f,
     .y = 49.0f,
@@ -45,20 +41,32 @@ const Rectangle LEVEL_RECTANGLE = {
     .height = LEVEL_HEIGHT_IN_BLOCKS * BLOCK_SIZE
 };
 
+const Vector2 SIDEBAR_TEXT_POSITIONS[3] = {
+    { 56.0f, 88.0f },
+    { 56.0f, 141.0f },
+    { 56.0f, 194.0f }
+};
+
 const Block EMPTY_BLOCK = { .type = BLT_EMPTY };
 
+const float FADE_DURATION = 0.25f;
+
+const float INVERSE_BLOCK_SIZE = 1.0f / BLOCK_SIZE;
+const float INVERSE_FADE_DURATION = 1.0f / FADE_DURATION;
+
 /* | `game` 모듈 변수... | */
+
+static GameAsset *ast_font_16pt, *ast_font_32pt;
+static GameAsset *ast_blocks, *ast_frame;
+static GameAsset *ast_dragged, *ast_marked;
 
 static GameLevel level;
 
 static Block *adjacents[MAX_ADJACENTS_COUNT];
 static Block *selected_block;
 
-static GameAsset *ast_blocks;
-static GameAsset *ast_frame;
-
 static int progress[NORMAL_BLOCK_COUNT];
-static int result = 0;
+static int matches, score, highest_score, result;
 
 /* | `game` 모듈 함수... | */
 
@@ -67,6 +75,9 @@ static void AddBlock(CPair indexes, BlockType type);
 
 /* 게임 플레이 화면에 블록을 그린다. */
 static void DrawBlock(Block *block);
+
+/* 블록 `block`이 일반 블록인지 확인한다. */
+static bool IsNormalBlock(Block *block);
 
 /* 블록 `block`의 위치를 업데이트한다. */
 static void UpdateBlock(Block *block);
@@ -88,6 +99,9 @@ static Vector2 GetWorldCoordinates(CPair indexes);
 
 /* 게임 플레이 화면에 현재 레벨을 그린다. */
 static void DrawLevel(void);
+
+/* 게임 플레이 화면에 사이드바 구성 요소를 그린다. */
+static void DrawSidebar(void);
 
 /* 레벨 문자열 `str`을 통해 레벨을 불러온다. */
 void LoadLevel(const char *str) {
@@ -114,8 +128,14 @@ void LoadLevel(const char *str) {
 
 /* 게임 플레이 화면을 초기화한다. */
 void InitGameScreen(void) {
+    ast_font_16pt = GetGameAsset(0);
+    ast_font_32pt = GetGameAsset(1);
+
     ast_blocks = GetGameAsset(2);
     ast_frame = GetGameAsset(3);
+
+    ast_dragged = GetGameAsset(4);
+    ast_marked = GetGameAsset(5);
 
     LoadLevel(LEVEL_00);
 }
@@ -130,6 +150,7 @@ void UpdateGameScreen(void) {
         WHITE
     );
 
+    DrawSidebar();
     DrawLevel();
 }
 
@@ -195,10 +216,14 @@ static void DrawBlock(Block *block) {
     }
 }
 
+/* 블록 `block`이 일반 블록인지 확인한다. */
+static bool IsNormalBlock(Block *block) {
+    return (block != NULL && block->type >= BLT_COLOR_01 && block->type <= BLT_COLOR_07);
+}
+
 /* 블록 `block`의 위치를 업데이트한다. */
 static void UpdateBlock(Block *block) {
-    if (block == NULL || block->type < BLT_COLOR_01
-        || block->type > BLT_COLOR_07) return;
+    if (block == NULL || !IsNormalBlock(block)) return;
 
     CPair indexes = GetLevelCoordinates(block->position);
 
@@ -217,6 +242,8 @@ static void UpdateBlock(Block *block) {
 
             // 블록을 왼쪽이나 오른쪽으로 이동할 수 있는지 확인한다.
             if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && CanBeDragged(block)) {
+                PlaySound(ast_dragged->data.sound);
+
                 block->state = BLS_DRAGGED;
                 selected_block = block;
             }
@@ -229,6 +256,9 @@ static void UpdateBlock(Block *block) {
 
                 break;
             } else {
+                if (!IsSoundPlaying(ast_marked->data.sound))
+                    PlaySound(ast_marked->data.sound);
+                
                 block->timer += GetFrameTime();
 
                 DrawTextureRec(
@@ -325,31 +355,34 @@ static void UpdateBlock(Block *block) {
             break;
     }
 
-    adjacents[0] = (indexes.y >= 1) 
-        ? &level.blocks[indexes.y - 1][indexes.x] 
-        : NULL;
+    if (block->state == BLS_NORMAL) {
+        adjacents[0] = (indexes.y >= 1) 
+            ? &level.blocks[indexes.y - 1][indexes.x] 
+            : NULL;
 
-    adjacents[1] = (indexes.x >= 1) 
-        ? &level.blocks[indexes.y][indexes.x - 1] 
-        : NULL;
+        adjacents[1] = (indexes.x >= 1) 
+            ? &level.blocks[indexes.y][indexes.x - 1] 
+            : NULL;
 
-    adjacents[2] = (indexes.y < LEVEL_HEIGHT_IN_BLOCKS - 1)
-        ? &level.blocks[indexes.y + 1][indexes.x] 
-        : NULL;
+        adjacents[2] = (indexes.y < LEVEL_HEIGHT_IN_BLOCKS - 1)
+            ? &level.blocks[indexes.y + 1][indexes.x] 
+            : NULL;
 
-    adjacents[3] = (indexes.x < LEVEL_WIDTH_IN_BLOCKS - 1) 
-        ? &level.blocks[indexes.y][indexes.x + 1] 
-        : NULL;
+        adjacents[3] = (indexes.x < LEVEL_WIDTH_IN_BLOCKS - 1) 
+            ? &level.blocks[indexes.y][indexes.x + 1] 
+            : NULL;
 
-    // 블록 주변에 이 블록과 같은 종류의 블록이 있는지 확인한다.
-    for (int i = 0; i < MAX_ADJACENTS_COUNT; i++)
-        if (adjacents[i] != NULL && block->type == adjacents[i]->type
-            && adjacents[i]->state == BLS_NORMAL) {
-            block->state = adjacents[i]->state = BLS_MARKED;
+        // 블록 주변에 이 블록과 같은 종류의 블록이 있는지 확인한다.
+        for (int i = 0; i < MAX_ADJACENTS_COUNT; i++) {
+            if (adjacents[i] != NULL && adjacents[i]->type == block->type
+                && adjacents[i]->state == BLS_NORMAL) {
+                block->state = adjacents[i]->state = BLS_MARKED;
 
-            if (selected_block == block || selected_block == adjacents[i])
-                selected_block = NULL;
+                if (selected_block == block || selected_block == adjacents[i])
+                    selected_block = NULL;
+            }
         }
+    }
 }
 
 /* 블록 `block`이 마우스로 이동 가능한지 확인한다. */
@@ -405,8 +438,42 @@ static void DrawLevel(void) {
 
             if (level.blocks[y][x].state != BLS_MARKED)
                 DrawBlock(&level.blocks[y][x]);
-
-            Vector2 position = GetWorldCoordinates((CPair) { x, y });
         }
+    }
+}
+
+/* 게임 플레이 화면에 사이드바 구성 요소를 그린다. */
+static void DrawSidebar(void) {
+    {
+        DrawTextEx(
+            ast_font_32pt->data.font,
+            TextFormat("\xEC\x8B\x9C\xEA\xB0\x84: %s", " 00:00"),
+            SIDEBAR_TEXT_POSITIONS[0],
+            ast_font_32pt->data.font.baseSize,
+            1,
+            BLACK
+        );
+
+        DrawTextEx(
+            ast_font_32pt->data.font,
+            TextFormat("\xEC\xA0\x90\xEC\x88\x98: %05d", score),
+            SIDEBAR_TEXT_POSITIONS[1],
+            ast_font_32pt->data.font.baseSize,
+            1,
+            BLACK
+        );
+
+        DrawTextEx(
+            ast_font_32pt->data.font,
+            TextFormat("\xEC\xB5\x9C\xEA\xB3\xA0: %05d", highest_score),
+            SIDEBAR_TEXT_POSITIONS[2],
+            ast_font_32pt->data.font.baseSize,
+            1,
+            BLACK
+        );
+    }
+
+    {
+        /* TODO: ... */
     }
 }

@@ -35,12 +35,12 @@
 /* | `loader` 모듈 변수... | */
 
 static GameAsset assets[] = {
-    { .type = GAT_FONT,    .path = "res/fonts/neodgm/neodgm-16pt.fnt" },
-    { .type = GAT_FONT,    .path = "res/fonts/neodgm/neodgm-32pt.fnt" },
-    { .type = GAT_TEXTURE, .path = "res/images/blocks.png"            },
-    { .type = GAT_TEXTURE, .path = "res/images/frame_test.png"        },
-    { .type = GAT_SOUND,   .path = "res/sounds/dragged.wav"           },
-    { .type = GAT_SOUND,   .path = "res/sounds/marked.wav"            }
+    { .type = GAT_FONT,    .path = "res/fonts/nanum/nanumsquareround-16pt.fnt" },
+    { .type = GAT_FONT,    .path = "res/fonts/nanum/nanumsquareround-32pt.fnt" },
+    { .type = GAT_TEXTURE, .path = "res/images/blocks.png"                     },
+    { .type = GAT_TEXTURE, .path = "res/images/frame.png"                      },
+    { .type = GAT_SOUND,   .path = "res/sounds/dragged.wav"                    },
+    { .type = GAT_SOUND,   .path = "res/sounds/marked.wav"                     }
 };
 
 static Rectangle progress_bar_inner_bounds = { .width = 764.0f, .height = 48.0f };
@@ -145,56 +145,54 @@ void UpdateLoadingScreen(void) {
             WHITE
         );
 
-        const char *path_text = TextFormat(
-            "-> %s (%d / %d)", 
-            assets[asset_index].path,
-            asset_index + 1,
-            max_asset_count
-        );
+        if (asset_index <= max_asset_count - 1) {
+            bool check = LoadGameAsset(asset_index);
 
-        const Vector2 font_dimensions = MeasureTextEx(
-            fnt_neodgm_min_32pt,
-            path_text,
-            PRELOAD_FONT_SIZE,
-            2.0f
-        );
+            if (!check) {
+                loading_failed = true;
 
-        DrawTextEx(
-            fnt_neodgm_min_32pt,
-            path_text,
-            (Vector2) {
-                0.5f * (SCREEN_WIDTH - font_dimensions.x),
-                v_loading_message.y + 80.0f
-            },
-            PRELOAD_FONT_SIZE,
-            2.0f,
-            WHITE
-        );
+                return;
+            }
+            
+            const char *path_text = TextFormat(
+                "-> %s (%d / %d)", 
+                assets[asset_index].path,
+                asset_index + 1,
+                max_asset_count
+            );
 
-        {
-            if (asset_index < max_asset_count - 1) {
-                bool check = LoadGameAsset(asset_index);
+            const Vector2 font_dimensions = MeasureTextEx(
+                fnt_neodgm_min_32pt,
+                path_text,
+                PRELOAD_FONT_SIZE,
+                2.0f
+            );
 
-                if (!check) {
-                    loading_failed = true;
+            DrawTextEx(
+                fnt_neodgm_min_32pt,
+                path_text,
+                (Vector2) {
+                    0.5f * (SCREEN_WIDTH - font_dimensions.x),
+                    v_loading_message.y + 80.0f
+                },
+                PRELOAD_FONT_SIZE,
+                2.0f,
+                WHITE
+            );
+            
+            asset_index++;
+        } else {
+            if (frame_counter >= TARGET_FPS) {
+                frame_counter = 0;
+                result = 1;
 
-                    return;
-                }
-
-                asset_index++;
-            } else {
-                if (frame_counter >= TARGET_FPS) {
-                    frame_counter = 0;
-                    result = 1;
-
-                    return;
-                }
-
-                frame_counter++;
+                return;
             }
 
-            UpdateProgressBar();
+            frame_counter++;
         }
+
+        UpdateProgressBar();
 
         DrawTextureEx(
             tx_copyright_message,
@@ -325,7 +323,7 @@ static void UpdateProgressBar(void) {
     const Rectangle progress_bar_bounds = {
         .x = progress_bar_inner_bounds.x,
         .y = progress_bar_inner_bounds.y,
-        .width = ((asset_index + 1) / (float) max_asset_count) 
+        .width = (asset_index / (float) max_asset_count) 
             * progress_bar_inner_bounds.width,
         .height = progress_bar_inner_bounds.height
     };
