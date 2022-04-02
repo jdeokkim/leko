@@ -49,6 +49,8 @@ const Vector2 SIDEBAR_TEXT_POSITIONS[3] = {
 
 const Block EMPTY_BLOCK = { .type = BLT_EMPTY };
 
+const double INVERSE_SIXTY = 1.0 / 60.0;
+
 const float FADE_DURATION = 0.25f;
 
 const float INVERSE_BLOCK_SIZE = 1.0f / BLOCK_SIZE;
@@ -64,6 +66,8 @@ static GameLevel level;
 
 static Block *adjacents[MAX_ADJACENTS_COUNT];
 static Block *selected_block;
+
+static double start_time, end_time;
 
 static int progress[NORMAL_BLOCK_COUNT];
 static int matches, score, highest_score, result;
@@ -111,9 +115,10 @@ void LoadLevel(const char *str) {
 
     token = strtok(buffer, ",");
 
+    // 블록의 종류를 하나씩 읽는다.
     for (int i = 0; token != NULL; i++) {
-        int x = i % LEVEL_WIDTH_IN_BLOCKS;
-        int y = i / LEVEL_WIDTH_IN_BLOCKS;
+        const int x = i % LEVEL_WIDTH_IN_BLOCKS;
+        const int y = i / LEVEL_WIDTH_IN_BLOCKS;
 
         BlockType type = atoi(token);
 
@@ -124,6 +129,9 @@ void LoadLevel(const char *str) {
 
         token = strtok(NULL, ",");
     }
+
+    // 게임 시작 시간을 설정한다.
+    start_time = GetTime();
 }
 
 /* 게임 플레이 화면을 초기화한다. */
@@ -137,6 +145,7 @@ void InitGameScreen(void) {
     ast_dragged = GetGameAsset(4);
     ast_marked = GetGameAsset(5);
 
+    // TODO: ...
     LoadLevel(LEVEL_00);
 }
 
@@ -223,7 +232,7 @@ static bool IsNormalBlock(Block *block) {
 
 /* 블록 `block`의 위치를 업데이트한다. */
 static void UpdateBlock(Block *block) {
-    if (block == NULL || !IsNormalBlock(block)) return;
+    if (!IsNormalBlock(block)) return;
 
     CPair indexes = GetLevelCoordinates(block->position);
 
@@ -252,6 +261,8 @@ static void UpdateBlock(Block *block) {
         
         case BLS_MARKED:
             if (block->timer >= FADE_DURATION) {
+                if (selected_block == block) selected_block = NULL;
+
                 level.blocks[indexes.y][indexes.x] = EMPTY_BLOCK;
 
                 break;
@@ -374,12 +385,11 @@ static void UpdateBlock(Block *block) {
 
         // 블록 주변에 이 블록과 같은 종류의 블록이 있는지 확인한다.
         for (int i = 0; i < MAX_ADJACENTS_COUNT; i++) {
-            if (adjacents[i] != NULL && adjacents[i]->type == block->type
+            if (IsNormalBlock(adjacents[i]) && adjacents[i]->type == block->type 
                 && adjacents[i]->state == BLS_NORMAL) {
                 block->state = adjacents[i]->state = BLS_MARKED;
-
-                if (selected_block == block || selected_block == adjacents[i])
-                    selected_block = NULL;
+                
+                matches++;
             }
         }
     }
@@ -389,8 +399,7 @@ static void UpdateBlock(Block *block) {
 static bool CanBeDragged(Block *block) {
     if (selected_block != NULL) return false;
 
-    return (block != NULL && block->type >= BLT_COLOR_01 
-        && block->type <= BLT_COLOR_07 && block->state == BLS_NORMAL
+    return (IsNormalBlock(block) && block->state == BLS_NORMAL
         && CheckCollisionPointRec(GetMousePosition(), GetBlockBounds(block)));
 }
 
@@ -440,14 +449,30 @@ static void DrawLevel(void) {
                 DrawBlock(&level.blocks[y][x]);
         }
     }
+
+    if (matches > 0) {
+        score += (matches + 1) * 100;
+
+        if (highest_score < score)
+            highest_score = score;
+
+        matches = 0;
+    }
+
+    end_time = GetTime();
 }
 
 /* 게임 플레이 화면에 사이드바 구성 요소를 그린다. */
 static void DrawSidebar(void) {
     {
+        // TODO: ...
         DrawTextEx(
             ast_font_32pt->data.font,
-            TextFormat("\xEC\x8B\x9C\xEA\xB0\x84: %s", " 00:00"),
+            TextFormat(
+                "\xEC\x8B\x9C\xEA\xB0\x84:  %02d:%02d",
+                (int) ((end_time - start_time) * INVERSE_SIXTY) % 60,
+                (int) (end_time - start_time) % 60
+            ),
             SIDEBAR_TEXT_POSITIONS[0],
             ast_font_32pt->data.font.baseSize,
             1,
