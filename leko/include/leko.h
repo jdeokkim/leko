@@ -25,22 +25,29 @@
 
 /* | 매크로 정의... | */
 
-#define LEKO_NAME      "c-krit/leko"
-#define LEKO_VERSION   "0.0.1"
+#define LEKO_NAME               "c-krit/leko"
+#define LEKO_VERSION            "0.0.1"
 
-#define TARGET_FPS     60
+#define TARGET_FPS              60
 
-#define SCREEN_WIDTH   1024
-#define SCREEN_HEIGHT  768
+#define SCREEN_WIDTH            1024
+#define SCREEN_HEIGHT           768
+
+#define BLOCK_SIZE              48
+
+#define NORMAL_BLOCK_COUNT      8
+
+#define LEVEL_WIDTH_IN_BLOCKS   15
+#define LEVEL_HEIGHT_IN_BLOCKS  14
 
 /* | 자료형 정의... | */
 
 /* 게임 리소스의 종류를 나타내는 열거형. */
 typedef enum GameAssetType {
-    GAT_FONT,
-    GAT_MUSIC,
-    GAT_SOUND,
-    GAT_TEXTURE
+    GAT_FONT,    // 비트맵 글꼴
+    GAT_MUSIC,   // 배경 음악
+    GAT_SOUND,   // 효과음
+    GAT_TEXTURE  // 텍스처
 } GameAssetType;
 
 /* 게임의 현재 화면을 나타내는 열거형. */
@@ -65,12 +72,9 @@ typedef struct GameAsset {
     } data;
 } GameAsset;
 
-/* `char` 데이터 2개를 나타내는 구조체. */
-typedef struct CPair { unsigned char x, y; } CPair;
-
 /* 블록의 종류를 나타내는 열거형. */
 typedef enum BlockType {
-    BLT_EMPTY,     // 빈 공간
+    BLT_EMPTY,     // 일반 블록, 빈 공간
     BLT_COLOR_01,  // 일반 블록, 첫 번째 색상
     BLT_COLOR_02,  // 일반 블록, 두 번째 색상
     BLT_COLOR_03,  // 일반 블록, 세 번째 색상
@@ -97,6 +101,12 @@ typedef struct Block {
     Vector2 velocity;  // 블록의 화면 기준 속도
     float timer;       // 시간 측정용 변수
 } Block;
+
+/* 게임의 레벨을 나타내는 구조체. */
+typedef struct GameLevel {
+    Block blocks[LEVEL_HEIGHT_IN_BLOCKS][LEVEL_WIDTH_IN_BLOCKS];  // 블록 배열
+    int goals[NORMAL_BLOCK_COUNT];                                // 레벨 클리어 목표
+} GameLevel;
 
 /* | `screen` 모듈 함수... | */
 
@@ -149,6 +159,9 @@ void UpdateSelectScreen(void);
 int FinishSelectScreen(void);
 
 /* | `game` 모듈 함수... | */
+
+/* 레벨 문자열 `str`을 통해 레벨을 불러온다. */
+void LoadLevel(const char *str);
 
 /* 게임 플레이 화면을 초기화한다. */
 void InitGameScreen(void);

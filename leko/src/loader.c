@@ -38,7 +38,7 @@ static GameAsset assets[] = {
     { .type = GAT_FONT,    .path = "res/fonts/neodgm/neodgm-16pt.fnt" },
     { .type = GAT_FONT,    .path = "res/fonts/neodgm/neodgm-32pt.fnt" },
     { .type = GAT_TEXTURE, .path = "res/images/blocks.png"            },
-    { .type = GAT_TEXTURE, .path = "res/images/frame.png"             },
+    { .type = GAT_TEXTURE, .path = "res/images/frame_test.png"        },
     { .type = GAT_SOUND,   .path = "res/sounds/dragged.wav"           },
     { .type = GAT_SOUND,   .path = "res/sounds/marked.wav"            }
 };
