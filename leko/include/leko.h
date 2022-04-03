@@ -35,7 +35,7 @@
 
 #define BLOCK_SIZE              48
 
-#define NORMAL_BLOCK_COUNT      7
+#define NORMAL_BLOCK_COUNT      (BLT_COLOR_07 - BLT_EMPTY)
 
 #define LEVEL_WIDTH_IN_BLOCKS   15
 #define LEVEL_HEIGHT_IN_BLOCKS  14
@@ -72,6 +72,13 @@ typedef struct GameAsset {
     } data;
 } GameAsset;
 
+/* 그림 버튼을 나타내는 구조체. */
+typedef struct ImageButton {
+    GameAsset *asset;
+    Rectangle source;
+    Rectangle dest;
+} ImageButton;
+
 /* 블록의 종류를 나타내는 열거형. */
 typedef enum BlockType {
     BLT_EMPTY,     // 일반 블록, 빈 공간
@@ -94,19 +101,7 @@ typedef enum BlockState {
 } BlockState;
 
 /* 블록을 나타내는 구조체. */
-typedef struct Block {
-    BlockType type;    // 블록의 종류
-    BlockState state;  // 블록의 상태
-    Vector2 position;  // 블록의 화면 기준 위치
-    Vector2 velocity;  // 블록의 화면 기준 속도
-    float timer;       // 시간 측정용 변수
-} Block;
-
-/* 게임의 레벨을 나타내는 구조체. */
-typedef struct GameLevel {
-    Block blocks[LEVEL_HEIGHT_IN_BLOCKS][LEVEL_WIDTH_IN_BLOCKS];  // 블록 배열
-    int goals[NORMAL_BLOCK_COUNT];                                // 레벨 클리어 목표
-} GameLevel;
+typedef struct Block Block;
 
 /* | `screen` 모듈 함수... | */
 
@@ -135,6 +130,11 @@ bool UnloadGameAsset(int index);
 
 /* `index + 1`번째 게임 리소스 데이터를 반환한다. */
 GameAsset *GetGameAsset(int index);
+
+/* | `ui` 모듈 함수... | */
+
+/* 그림 버튼을 화면에 그린다. */
+int DrawImageButton(ImageButton button);
 
 /* | `title` 모듈 함수... | */
 

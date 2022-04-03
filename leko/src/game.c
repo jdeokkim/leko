@@ -30,39 +30,69 @@
 /* | `game` 모듈 자료형 정의... | */
 
 /* `char` 데이터 2개를 나타내는 구조체. */
-typedef struct CPair { unsigned char x, y; } CPair;
+typedef struct CPair { 
+    unsigned char x;
+    unsigned char y; 
+} CPair;
+
+/* 블록을 나타내는 구조체. */
+typedef struct Block {
+    BlockType type;    // 블록의 종류
+    BlockState state;  // 블록의 상태
+    Vector2 position;  // 블록의 화면 기준 위치
+    Vector2 velocity;  // 블록의 화면 기준 속도
+    float timer;       // 시간 측정용 변수
+} Block;
+
+/* 게임의 레벨을 나타내는 구조체. */
+typedef struct Level {
+    Block blocks[LEVEL_HEIGHT_IN_BLOCKS][LEVEL_WIDTH_IN_BLOCKS];  // 블록 배열
+    int goals[NORMAL_BLOCK_COUNT];                                // 레벨 클리어 목표
+} Level;
 
 /* 같은 종류의 블록의 모임을 나타내는 구조체. */
-typedef struct Matches { BlockType type; int count; } Matches;
+typedef struct Matches { 
+    BlockType type; 
+    int count; 
+} Matches;
 
 /* | `game` 모듈 상수... | */
 
-const Rectangle LEVEL_RECTANGLE = {
+const Rectangle LEVEL_BOUNDS = {
     .x = 260.0f,
     .y = 49.0f,
     .width = LEVEL_WIDTH_IN_BLOCKS * BLOCK_SIZE,
     .height = LEVEL_HEIGHT_IN_BLOCKS * BLOCK_SIZE
 };
 
+const Rectangle SIDEBAR_MENU_BUTTON_BOUNDS = {
+    .x = 70.0f,
+    .y = 640.0f,
+    .width = 160.0f,
+    .height = 76.0f
+};
+
 const Rectangle SIDEBAR_PROG_BLOCK_BOUNDS[NORMAL_BLOCK_COUNT] = {
-    { 88.0f, 292.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
-    { 88.0f, 342.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
-    { 88.0f, 392.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
-    { 88.0f, 442.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
-    { 88.0f, 492.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
-    { 88.0f, 542.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
-    { 88.0f, 592.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE }
+    { 90.0f, 292.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
+    { 90.0f, 342.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
+    { 90.0f, 392.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
+    { 90.0f, 442.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
+    { 90.0f, 492.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
+    { 90.0f, 542.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
+    { 90.0f, 592.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE }
 };
 
 const Vector2 SIDEBAR_PROG_TEXT_POSITIONS[NORMAL_BLOCK_COUNT] = {
-    { 130.0f, 294.0f },
-    { 130.0f, 344.0f },
-    { 130.0f, 394.0f },
-    { 130.0f, 444.0f },
-    { 130.0f, 494.0f },
-    { 130.0f, 544.0f },
-    { 130.0f, 594.0f }
+    { 133.0f, 294.0f },
+    { 133.0f, 344.0f },
+    { 133.0f, 394.0f },
+    { 133.0f, 444.0f },
+    { 133.0f, 494.0f },
+    { 133.0f, 544.0f },
+    { 133.0f, 594.0f }
 };
+
+const Vector2 SIDEBAR_MENU_BUTTON_TEXT_OFFSET = { 150.0f, 668.0f };
 
 const Vector2 SIDEBAR_STATS_TEXT_POSITIONS[3] = {
     { 56.0f, 88.0f },
@@ -81,11 +111,11 @@ const float INVERSE_FADE_DURATION = 1.0f / FADE_DURATION;
 
 /* | `game` 모듈 변수... | */
 
-static GameAsset *ast_font_16pt, *ast_font_24pt, *ast_font_32pt;
-static GameAsset *ast_blocks, *ast_frame;
+static GameAsset *ast_font_24pt, *ast_font_32pt;
+static GameAsset *ast_buttons, *ast_blocks, *ast_frame;
 static GameAsset *ast_dragged, *ast_marked;
 
-static GameLevel level;
+static Level level;
 
 static Block *adjacents[MAX_ADJACENTS_COUNT];
 static Block *selected_block;
@@ -126,6 +156,9 @@ static int GetMouseDirection(Block *block);
 /* 레벨 위치 `indexes`를 게임 화면의 위치로 변환한다. */
 static Vector2 GetWorldCoordinates(CPair indexes);
 
+/* 현재 레벨의 클리어 여부를 확인한다. */
+static bool IsLevelCompleted(void);
+
 /* 게임 플레이 화면에 현재 레벨을 그린다. */
 static void DrawLevel(void);
 
@@ -161,15 +194,15 @@ void LoadLevel(const char *str) {
 
 /* 게임 플레이 화면을 초기화한다. */
 void InitGameScreen(void) {
-    ast_font_16pt = GetGameAsset(0);
     ast_font_24pt = GetGameAsset(1);
     ast_font_32pt = GetGameAsset(2);
 
-    ast_blocks = GetGameAsset(3);
-    ast_frame = GetGameAsset(4);
+    ast_buttons = GetGameAsset(3);
+    ast_blocks = GetGameAsset(4);
+    ast_frame = GetGameAsset(5);
 
-    ast_dragged = GetGameAsset(5);
-    ast_marked = GetGameAsset(6);
+    ast_dragged = GetGameAsset(6);
+    ast_marked = GetGameAsset(7);
 
     // TODO: ...
     LoadLevel(LEVEL_00);
@@ -443,8 +476,8 @@ static Rectangle GetBlockBounds(Block *block) {
 /* 게임 화면의 위치 `v`를 레벨 위치로 변환한다. */
 static CPair GetLevelCoordinates(Vector2 v) {
     return (CPair) {
-        .x = (v.x - LEVEL_RECTANGLE.x) * INVERSE_BLOCK_SIZE,
-        .y = (v.y - LEVEL_RECTANGLE.y) * INVERSE_BLOCK_SIZE
+        .x = (v.x - LEVEL_BOUNDS.x) * INVERSE_BLOCK_SIZE,
+        .y = (v.y - LEVEL_BOUNDS.y) * INVERSE_BLOCK_SIZE
     };
 }
 
@@ -461,9 +494,17 @@ static int GetMouseDirection(Block *block) {
 /* 레벨 위치 `indexes`를 게임 화면의 위치로 변환한다. */
 static Vector2 GetWorldCoordinates(CPair indexes) {
     return (Vector2) {
-        LEVEL_RECTANGLE.x + (indexes.x * BLOCK_SIZE),
-        LEVEL_RECTANGLE.y + (indexes.y * BLOCK_SIZE)
+        LEVEL_BOUNDS.x + (indexes.x * BLOCK_SIZE),
+        LEVEL_BOUNDS.y + (indexes.y * BLOCK_SIZE)
     };
+}
+
+/* 현재 레벨의 클리어 여부를 확인한다. */
+static bool IsLevelCompleted(void) {
+    for (int i = 0; i < NORMAL_BLOCK_COUNT; i++)
+        if (progress[i] > 0) return false;
+
+    return true;
 }
 
 /* 게임 플레이 화면에 현재 레벨을 그린다. */
@@ -477,6 +518,7 @@ static void DrawLevel(void) {
         }
     }
 
+    // 짝이 맞는 블록이 있을 경우, 점수와 진행 상황을 업데이트한다.
     if (matches.count > 0) {
         progress[matches.type - 1] += (matches.count + 1);
         score += (matches.count + 1) * 100;
@@ -484,6 +526,7 @@ static void DrawLevel(void) {
         if (highest_score < score)
             highest_score = score;
 
+        matches.type = BLT_EMPTY;
         matches.count = 0;
     }
 
@@ -493,7 +536,6 @@ static void DrawLevel(void) {
 /* 게임 플레이 화면에 사이드바 구성 요소를 그린다. */
 static void DrawSidebar(void) {
     {
-        // TODO: ...
         DrawTextEx(
             ast_font_32pt->data.font,
             TextFormat(
@@ -503,7 +545,7 @@ static void DrawSidebar(void) {
             ),
             SIDEBAR_STATS_TEXT_POSITIONS[0],
             ast_font_32pt->data.font.baseSize,
-            1,
+            1.0f,
             BLACK
         );
 
@@ -512,7 +554,7 @@ static void DrawSidebar(void) {
             TextFormat("\xEC\xA0\x90\xEC\x88\x98: %05d", score),
             SIDEBAR_STATS_TEXT_POSITIONS[1],
             ast_font_32pt->data.font.baseSize,
-            1,
+            1.0f,
             BLACK
         );
 
@@ -521,7 +563,7 @@ static void DrawSidebar(void) {
             TextFormat("\xEC\xB5\x9C\xEA\xB3\xA0: %05d", highest_score),
             SIDEBAR_STATS_TEXT_POSITIONS[2],
             ast_font_32pt->data.font.baseSize,
-            1,
+            1.0f,
             BLACK
         );
     }
@@ -551,9 +593,43 @@ static void DrawSidebar(void) {
                 ),
                 SIDEBAR_PROG_TEXT_POSITIONS[i],
                 ast_font_24pt->data.font.baseSize,
-                1,
+                1.0f,
                 BLACK
             );
         }
+    }
+
+    {
+        int state = DrawImageButton(
+            (ImageButton) {
+                ast_buttons,
+                (Rectangle) {
+                    .width = SIDEBAR_MENU_BUTTON_BOUNDS.width,
+                    .height = SIDEBAR_MENU_BUTTON_BOUNDS.height
+                },
+                SIDEBAR_MENU_BUTTON_BOUNDS
+            }
+        );
+
+        const char *button_text = "\xEB\xA9\x94\xEB\x89\xB4";
+
+        Vector2 dimensions = MeasureTextEx(
+            ast_font_24pt->data.font,
+            button_text,
+            ast_font_24pt->data.font.baseSize,
+            2.0f
+        );
+
+        DrawTextEx(
+            ast_font_24pt->data.font,
+            button_text,
+            (Vector2) {
+                SIDEBAR_MENU_BUTTON_TEXT_OFFSET.x - 0.5f * dimensions.x,
+                SIDEBAR_MENU_BUTTON_TEXT_OFFSET.y - 0.5f * dimensions.y
+            },
+            ast_font_24pt->data.font.baseSize,
+            2.0f,
+            WHITE
+        );
     }
 }

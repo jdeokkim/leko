@@ -15,4 +15,30 @@
     along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-/* TODO: ... */
+#include "leko.h"
+
+/* | `ui` 모듈 함수... | */
+
+/* 그림 버튼을 화면에 그린다. */
+int DrawImageButton(ImageButton button) {
+    unsigned char state = 0;
+
+    if (CheckCollisionPointRec(GetMousePosition(), button.dest)) {
+        if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) state = 1;
+        else state = 2;
+    }
+
+    // 그림 버튼의 상태에 따라 모양을 변경한다.
+    button.source.x = state * button.source.width;
+
+    DrawTexturePro(
+        button.asset->data.texture,
+        button.source,
+        button.dest,
+        (Vector2) { 0.0f, 0.0f },
+        0.0f,
+        WHITE
+    );
+
+    return state;
+}

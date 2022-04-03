@@ -22,6 +22,8 @@
 
 /* | `loader` 모듈 매크로 정의... | */
 
+#define LOADER_WAIT_TIME         1.0f
+
 #define PRELOAD_FONT_FIRST_CHAR  0x20
 #define PRELOAD_FONT_SIZE        32
 
@@ -38,6 +40,7 @@ static GameAsset assets[] = {
     { .type = GAT_FONT,    .path = "res/fonts/nanum/nanumsquareround-16pt.fnt" },
     { .type = GAT_FONT,    .path = "res/fonts/nanum/nanumsquareround-24pt.fnt" },
     { .type = GAT_FONT,    .path = "res/fonts/nanum/nanumsquareround-32pt.fnt" },
+    { .type = GAT_TEXTURE, .path = "res/images/buttons.png"                    },
     { .type = GAT_TEXTURE, .path = "res/images/blocks.png"                     },
     { .type = GAT_TEXTURE, .path = "res/images/frame.png"                      },
     { .type = GAT_SOUND,   .path = "res/sounds/dragged.wav"                    },
@@ -131,7 +134,7 @@ void InitLoadingScreen(void) {
 
 /* 로딩 화면을 업데이트한다. */
 void UpdateLoadingScreen(void) {
-    static int frame_counter = 0;
+    static double timer = 0;
 
     if (loading_failed) {
         UpdateErrorScreen();
@@ -183,14 +186,14 @@ void UpdateLoadingScreen(void) {
             
             asset_index++;
         } else {
-            if (frame_counter >= TARGET_FPS) {
-                frame_counter = 0;
+            if (timer >= LOADER_WAIT_TIME) {
+                timer = 0.0f;
                 result = 1;
 
                 return;
             }
 
-            frame_counter++;
+            timer += GetFrameTime();
         }
 
         UpdateProgressBar();
