@@ -35,7 +35,7 @@
 
 #define BLOCK_SIZE              48
 
-#define NORMAL_BLOCK_COUNT      8
+#define NORMAL_BLOCK_COUNT      7
 
 #define LEVEL_WIDTH_IN_BLOCKS   15
 #define LEVEL_HEIGHT_IN_BLOCKS  14

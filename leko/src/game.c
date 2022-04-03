@@ -32,6 +32,9 @@
 /* `char` 데이터 2개를 나타내는 구조체. */
 typedef struct CPair { unsigned char x, y; } CPair;
 
+/* 같은 종류의 블록의 모임을 나타내는 구조체. */
+typedef struct Matches { BlockType type; int count; } Matches;
+
 /* | `game` 모듈 상수... | */
 
 const Rectangle LEVEL_RECTANGLE = {
@@ -41,7 +44,27 @@ const Rectangle LEVEL_RECTANGLE = {
     .height = LEVEL_HEIGHT_IN_BLOCKS * BLOCK_SIZE
 };
 
-const Vector2 SIDEBAR_TEXT_POSITIONS[3] = {
+const Rectangle SIDEBAR_PROG_BLOCK_BOUNDS[NORMAL_BLOCK_COUNT] = {
+    { 88.0f, 292.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
+    { 88.0f, 342.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
+    { 88.0f, 392.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
+    { 88.0f, 442.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
+    { 88.0f, 492.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
+    { 88.0f, 542.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE },
+    { 88.0f, 592.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE }
+};
+
+const Vector2 SIDEBAR_PROG_TEXT_POSITIONS[NORMAL_BLOCK_COUNT] = {
+    { 130.0f, 294.0f },
+    { 130.0f, 344.0f },
+    { 130.0f, 394.0f },
+    { 130.0f, 444.0f },
+    { 130.0f, 494.0f },
+    { 130.0f, 544.0f },
+    { 130.0f, 594.0f }
+};
+
+const Vector2 SIDEBAR_STATS_TEXT_POSITIONS[3] = {
     { 56.0f, 88.0f },
     { 56.0f, 141.0f },
     { 56.0f, 194.0f }
@@ -58,7 +81,7 @@ const float INVERSE_FADE_DURATION = 1.0f / FADE_DURATION;
 
 /* | `game` 모듈 변수... | */
 
-static GameAsset *ast_font_16pt, *ast_font_32pt;
+static GameAsset *ast_font_16pt, *ast_font_24pt, *ast_font_32pt;
 static GameAsset *ast_blocks, *ast_frame;
 static GameAsset *ast_dragged, *ast_marked;
 
@@ -67,10 +90,12 @@ static GameLevel level;
 static Block *adjacents[MAX_ADJACENTS_COUNT];
 static Block *selected_block;
 
+static Matches matches;
+
 static double start_time, end_time;
 
 static int progress[NORMAL_BLOCK_COUNT];
-static int matches, score, highest_score, result;
+static int score, highest_score, result;
 
 /* | `game` 모듈 함수... | */
 
@@ -125,7 +150,7 @@ void LoadLevel(const char *str) {
         level.blocks[y][x].type = type;
         level.blocks[y][x].position = GetWorldCoordinates((CPair) { x, y });
 
-        if (type <= BLT_COLOR_07) level.goals[type]++;
+        if (IsNormalBlock(&level.blocks[y][x])) level.goals[type - 1]++;
 
         token = strtok(NULL, ",");
     }
@@ -137,13 +162,14 @@ void LoadLevel(const char *str) {
 /* 게임 플레이 화면을 초기화한다. */
 void InitGameScreen(void) {
     ast_font_16pt = GetGameAsset(0);
-    ast_font_32pt = GetGameAsset(1);
+    ast_font_24pt = GetGameAsset(1);
+    ast_font_32pt = GetGameAsset(2);
 
-    ast_blocks = GetGameAsset(2);
-    ast_frame = GetGameAsset(3);
+    ast_blocks = GetGameAsset(3);
+    ast_frame = GetGameAsset(4);
 
-    ast_dragged = GetGameAsset(4);
-    ast_marked = GetGameAsset(5);
+    ast_dragged = GetGameAsset(5);
+    ast_marked = GetGameAsset(6);
 
     // TODO: ...
     LoadLevel(LEVEL_00);
@@ -389,7 +415,8 @@ static void UpdateBlock(Block *block) {
                 && adjacents[i]->state == BLS_NORMAL) {
                 block->state = adjacents[i]->state = BLS_MARKED;
                 
-                matches++;
+                matches.type = block->type;
+                matches.count++;
             }
         }
     }
@@ -450,13 +477,14 @@ static void DrawLevel(void) {
         }
     }
 
-    if (matches > 0) {
-        score += (matches + 1) * 100;
+    if (matches.count > 0) {
+        progress[matches.type - 1] += (matches.count + 1);
+        score += (matches.count + 1) * 100;
 
         if (highest_score < score)
             highest_score = score;
 
-        matches = 0;
+        matches.count = 0;
     }
 
     end_time = GetTime();
@@ -473,7 +501,7 @@ static void DrawSidebar(void) {
                 (int) ((end_time - start_time) * INVERSE_SIXTY) % 60,
                 (int) (end_time - start_time) % 60
             ),
-            SIDEBAR_TEXT_POSITIONS[0],
+            SIDEBAR_STATS_TEXT_POSITIONS[0],
             ast_font_32pt->data.font.baseSize,
             1,
             BLACK
@@ -482,7 +510,7 @@ static void DrawSidebar(void) {
         DrawTextEx(
             ast_font_32pt->data.font,
             TextFormat("\xEC\xA0\x90\xEC\x88\x98: %05d", score),
-            SIDEBAR_TEXT_POSITIONS[1],
+            SIDEBAR_STATS_TEXT_POSITIONS[1],
             ast_font_32pt->data.font.baseSize,
             1,
             BLACK
@@ -491,7 +519,7 @@ static void DrawSidebar(void) {
         DrawTextEx(
             ast_font_32pt->data.font,
             TextFormat("\xEC\xB5\x9C\xEA\xB3\xA0: %05d", highest_score),
-            SIDEBAR_TEXT_POSITIONS[2],
+            SIDEBAR_STATS_TEXT_POSITIONS[2],
             ast_font_32pt->data.font.baseSize,
             1,
             BLACK
@@ -499,6 +527,33 @@ static void DrawSidebar(void) {
     }
 
     {
-        /* TODO: ... */
+        for (int i = 0; i < NORMAL_BLOCK_COUNT; i++) {
+            DrawTexturePro(
+                ast_blocks->data.texture,
+                (Rectangle) {
+                    (i + 1) * BLOCK_SIZE,
+                    0.0f,
+                    BLOCK_SIZE,
+                    BLOCK_SIZE
+                },
+                SIDEBAR_PROG_BLOCK_BOUNDS[i],
+                (Vector2) { 0.0f, 0.0f },
+                0.0f,
+                WHITE
+            );
+
+            DrawTextEx(
+                ast_font_24pt->data.font,
+                TextFormat(
+                    "%02d / %02d", 
+                    level.goals[i] - progress[i], 
+                    level.goals[i]
+                ),
+                SIDEBAR_PROG_TEXT_POSITIONS[i],
+                ast_font_24pt->data.font.baseSize,
+                1,
+                BLACK
+            );
+        }
     }
 }

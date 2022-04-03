@@ -36,6 +36,7 @@
 
 static GameAsset assets[] = {
     { .type = GAT_FONT,    .path = "res/fonts/nanum/nanumsquareround-16pt.fnt" },
+    { .type = GAT_FONT,    .path = "res/fonts/nanum/nanumsquareround-24pt.fnt" },
     { .type = GAT_FONT,    .path = "res/fonts/nanum/nanumsquareround-32pt.fnt" },
     { .type = GAT_TEXTURE, .path = "res/images/blocks.png"                     },
     { .type = GAT_TEXTURE, .path = "res/images/frame.png"                      },
