@@ -61,22 +61,34 @@ typedef enum GameScreen {
 
 /* 게임의 리소스를 나타내는 구조체. */
 typedef struct GameAsset {
-    bool loaded;
-    GameAssetType type;
-    const char *path;
+    bool loaded;            // 게임 리소스의 로딩 여부
+    GameAssetType type;     // 게임 리소스의 종류
+    const char *path;       // 게임 리소스의 경로
     union {
         Font font;
         Music music;
         Sound sound;
         Texture2D texture;
-    } data;
+    } data;                 // 게임 리소스의 데이터
 } GameAsset;
+
+/* 게임의 환경 설정을 나타내는 구조체. */
+typedef struct GameSettings {
+    bool msaa_4x;      // 안티-에일리어싱 옵션 설정
+    bool show_fps;     // 게임 화면에 FPS 표시 여부
+    int target_fps;    // 게임의 목표 FPS 설정
+    struct {
+        float master;
+        float music;
+        float sound;
+    } volume;          // 게임의 볼륨 설정
+} GameSettings;
 
 /* 그림 버튼을 나타내는 구조체. */
 typedef struct ImageButton {
-    GameAsset *asset;
-    Rectangle source;
-    Rectangle dest;
+    GameAsset *asset;  // 그림 버튼 렌더링에 필요한 게임 리소스
+    Rectangle source;  // 텍스처 파일을 기준으로 한 렌더링 영역
+    Rectangle dest;    // 게임 화면을 기준으로 한 렌더링 영역
 } ImageButton;
 
 /* 블록의 종류를 나타내는 열거형. */
@@ -135,6 +147,9 @@ GameAsset *GetGameAsset(int index);
 
 /* 그림 버튼을 화면에 그린다. */
 int DrawImageButton(ImageButton button);
+
+/* 게임 설정 창을 화면에 그린다. */
+bool DrawSettingsWindow(void);
 
 /* | `title` 모듈 함수... | */
 

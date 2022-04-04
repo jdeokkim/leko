@@ -23,7 +23,15 @@ int main(void) {
     InitAudioDevice();
 
     {
-        InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, LEKO_NAME);
+        InitWindow(
+            SCREEN_WIDTH, 
+            SCREEN_HEIGHT, 
+            TextFormat(
+                "%s v%s\n", 
+                LEKO_NAME, 
+                LEKO_VERSION
+            )
+        );
 
         while (!WindowShouldClose())
             UpdateScreen();

@@ -17,13 +17,30 @@
 
 #include "leko.h"
 
+#define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
+
+/* | `ui` 모듈 매크로 정의... | */
+
+#define GUI_WINDOW_BOX_WIDTH   640.0f
+#define GUI_WINDOW_BOX_HEIGHT  480.0f
+
+/* | `ui` 모듈 상수... | */
+
+const Rectangle GUI_WINDOW_BOX_BOUNDS = {
+    0.5f * (SCREEN_WIDTH - GUI_WINDOW_BOX_WIDTH), 
+    0.5f * (SCREEN_HEIGHT - GUI_WINDOW_BOX_HEIGHT), 
+    GUI_WINDOW_BOX_WIDTH,
+    GUI_WINDOW_BOX_HEIGHT
+};
+
 /* | `ui` 모듈 함수... | */
 
 /* 그림 버튼을 화면에 그린다. */
 int DrawImageButton(ImageButton button) {
     unsigned char state = 0;
 
-    if (CheckCollisionPointRec(GetMousePosition(), button.dest)) {
+    if (!GuiIsLocked() && CheckCollisionPointRec(GetMousePosition(), button.dest)) {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) state = 1;
         else state = 2;
     }
@@ -41,4 +58,16 @@ int DrawImageButton(ImageButton button) {
     );
 
     return state;
+}
+
+/* 게임 설정 창을 화면에 그린다. */
+bool DrawSettingsWindow(void) {
+    bool result = GuiWindowBox(
+        GUI_WINDOW_BOX_BOUNDS,
+        "\xED\x99\x98\xEA\xB2\xBD\x20\xEC\x84\xA4\xEC\xA0\x95"
+    );
+
+    /* TODO: ... */
+
+    return result;
 }

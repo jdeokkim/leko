@@ -26,6 +26,7 @@
 #define GRAVITY_CONSTANT     600.0f
 
 #define MAX_ADJACENTS_COUNT  4
+#define MAX_SCORES_COUNT     2
 
 /* | `game` 모듈 자료형 정의... | */
 
@@ -124,16 +125,24 @@ static Matches matches;
 
 static double start_time, end_time;
 
-static int progress[NORMAL_BLOCK_COUNT];
-static int score, highest_score, result;
+static bool gui_menu_window_box_visible, gui_settings_window_box_visible;
+
+static int progress[NORMAL_BLOCK_COUNT], scores[MAX_SCORES_COUNT];
+static int result, state;
 
 /* | `game` 모듈 함수... | */
 
 /* 레벨 위치 `indexes`에 종류가 `type`인 블록을 추가한다. */
 static void AddBlock(CPair indexes, BlockType type);
 
+/* 블록 `block`이 마우스로 이동 가능한지 확인한다. */
+static bool CanBeDragged(Block *block);
+
 /* 게임 플레이 화면에 블록을 그린다. */
 static void DrawBlock(Block *block);
+
+/* 블록 `block`의 화면 기준 경계 범위를 반환한다. */
+static Rectangle GetBlockBounds(Block *block);
 
 /* 블록 `block`이 일반 블록인지 확인한다. */
 static bool IsNormalBlock(Block *block);
@@ -141,23 +150,20 @@ static bool IsNormalBlock(Block *block);
 /* 블록 `block`의 위치를 업데이트한다. */
 static void UpdateBlock(Block *block);
 
-/* 블록 `block`이 마우스로 이동 가능한지 확인한다. */
-static bool CanBeDragged(Block *block);
-
-/* 블록 `block`의 화면 기준 경계 범위를 반환한다. */
-static Rectangle GetBlockBounds(Block *block);
-
 /* 게임 화면의 위치 `v`를 레벨 위치로 변환한다. */
 static CPair GetLevelCoordinates(Vector2 v);
-
-/* 블록 `block`의 X 좌표를 기준으로 마우스가 어느 방향에 있는지 확인한다. */
-static int GetMouseDirection(Block *block);
 
 /* 레벨 위치 `indexes`를 게임 화면의 위치로 변환한다. */
 static Vector2 GetWorldCoordinates(CPair indexes);
 
+/* 블록 `block`의 X 좌표를 기준으로 마우스가 어느 방향에 있는지 확인한다. */
+static int GetMouseDirection(Block *block);
+
 /* 현재 레벨의 클리어 여부를 확인한다. */
 static bool IsLevelCompleted(void);
+
+/* 게임의 상태를 변경한다. */
+static void SetGameState(bool state);
 
 /* 게임 플레이 화면에 현재 레벨을 그린다. */
 static void DrawLevel(void);
@@ -218,8 +224,8 @@ void UpdateGameScreen(void) {
         WHITE
     );
 
-    DrawSidebar();
     DrawLevel();
+    DrawSidebar();
 }
 
 /* 게임 플레이 화면을 종료한다. */
@@ -237,6 +243,14 @@ static void AddBlock(CPair indexes, BlockType type) {
         .state = BLS_NORMAL,
         .position = GetWorldCoordinates(indexes)
     };
+}
+
+/* 블록 `block`이 마우스로 이동 가능한지 확인한다. */
+static bool CanBeDragged(Block *block) {
+    if (selected_block != NULL) return false;
+
+    return (IsNormalBlock(block) && block->state == BLS_NORMAL
+        && CheckCollisionPointRec(GetMousePosition(), GetBlockBounds(block)));
 }
 
 /* 게임 플레이 화면에 블록을 그린다. */
@@ -282,6 +296,16 @@ static void DrawBlock(Block *block) {
             );
         }
     }
+}
+
+/* 블록 `block`의 화면 기준 경계 범위를 반환한다. */
+static Rectangle GetBlockBounds(Block *block) {
+    return (Rectangle) {
+        .x = block->position.x,
+        .y = block->position.y,
+        BLOCK_SIZE,
+        BLOCK_SIZE
+    };
 }
 
 /* 블록 `block`이 일반 블록인지 확인한다. */
@@ -455,29 +479,19 @@ static void UpdateBlock(Block *block) {
     }
 }
 
-/* 블록 `block`이 마우스로 이동 가능한지 확인한다. */
-static bool CanBeDragged(Block *block) {
-    if (selected_block != NULL) return false;
-
-    return (IsNormalBlock(block) && block->state == BLS_NORMAL
-        && CheckCollisionPointRec(GetMousePosition(), GetBlockBounds(block)));
-}
-
-/* 블록 `block`의 화면 기준 경계 범위를 반환한다. */
-static Rectangle GetBlockBounds(Block *block) {
-    return (Rectangle) {
-        .x = block->position.x,
-        .y = block->position.y,
-        BLOCK_SIZE,
-        BLOCK_SIZE
-    };
-}
-
 /* 게임 화면의 위치 `v`를 레벨 위치로 변환한다. */
 static CPair GetLevelCoordinates(Vector2 v) {
     return (CPair) {
         .x = (v.x - LEVEL_BOUNDS.x) * INVERSE_BLOCK_SIZE,
         .y = (v.y - LEVEL_BOUNDS.y) * INVERSE_BLOCK_SIZE
+    };
+}
+
+/* 레벨 위치 `indexes`를 게임 화면의 위치로 변환한다. */
+static Vector2 GetWorldCoordinates(CPair indexes) {
+    return (Vector2) {
+        LEVEL_BOUNDS.x + (indexes.x * BLOCK_SIZE),
+        LEVEL_BOUNDS.y + (indexes.y * BLOCK_SIZE)
     };
 }
 
@@ -491,20 +505,17 @@ static int GetMouseDirection(Block *block) {
     else return 1;
 }
 
-/* 레벨 위치 `indexes`를 게임 화면의 위치로 변환한다. */
-static Vector2 GetWorldCoordinates(CPair indexes) {
-    return (Vector2) {
-        LEVEL_BOUNDS.x + (indexes.x * BLOCK_SIZE),
-        LEVEL_BOUNDS.y + (indexes.y * BLOCK_SIZE)
-    };
-}
-
 /* 현재 레벨의 클리어 여부를 확인한다. */
 static bool IsLevelCompleted(void) {
     for (int i = 0; i < NORMAL_BLOCK_COUNT; i++)
         if (progress[i] > 0) return false;
 
     return true;
+}
+
+/* 게임의 상태를 변경한다. */
+static void SetGameState(bool state) {
+    
 }
 
 /* 게임 플레이 화면에 현재 레벨을 그린다. */
@@ -521,10 +532,10 @@ static void DrawLevel(void) {
     // 짝이 맞는 블록이 있을 경우, 점수와 진행 상황을 업데이트한다.
     if (matches.count > 0) {
         progress[matches.type - 1] += (matches.count + 1);
-        score += (matches.count + 1) * 100;
+        scores[0] += (matches.count + 1) * 100;
 
-        if (highest_score < score)
-            highest_score = score;
+        if (scores[1] < scores[0])
+            scores[1] = scores[0];
 
         matches.type = BLT_EMPTY;
         matches.count = 0;
@@ -551,7 +562,7 @@ static void DrawSidebar(void) {
 
         DrawTextEx(
             ast_font_32pt->data.font,
-            TextFormat("\xEC\xA0\x90\xEC\x88\x98: %05d", score),
+            TextFormat("\xEC\xA0\x90\xEC\x88\x98: %05d", scores[0]),
             SIDEBAR_STATS_TEXT_POSITIONS[1],
             ast_font_32pt->data.font.baseSize,
             1.0f,
@@ -560,7 +571,7 @@ static void DrawSidebar(void) {
 
         DrawTextEx(
             ast_font_32pt->data.font,
-            TextFormat("\xEC\xB5\x9C\xEA\xB3\xA0: %05d", highest_score),
+            TextFormat("\xEC\xB5\x9C\xEA\xB3\xA0: %05d", scores[1]),
             SIDEBAR_STATS_TEXT_POSITIONS[2],
             ast_font_32pt->data.font.baseSize,
             1.0f,
@@ -600,7 +611,7 @@ static void DrawSidebar(void) {
     }
 
     {
-        int state = DrawImageButton(
+        int button_state = DrawImageButton(
             (ImageButton) {
                 ast_buttons,
                 (Rectangle) {
@@ -631,5 +642,22 @@ static void DrawSidebar(void) {
             2.0f,
             WHITE
         );
+
+        // '메뉴' 버튼을 클릭했을 때에 동작을 지정한다.
+        if (button_state == 2) {
+            // gui_menu_window_box_visible = true;
+            gui_settings_window_box_visible = true;
+        }
+    }
+
+    {
+        if (gui_menu_window_box_visible) {
+            /* TODO: ... */
+        }
+
+        if (gui_settings_window_box_visible) {
+            // 'X' 버튼을 클릭할 경우, 현재 창을 닫는다.
+            if (DrawSettingsWindow()) gui_settings_window_box_visible = false;
+        }
     }
 }
