@@ -112,7 +112,7 @@ const float INVERSE_FADE_DURATION = 1.0f / FADE_DURATION;
 
 /* | `game` 모듈 변수... | */
 
-static GameAsset *ast_font_24pt, *ast_font_32pt;
+static GameAsset *ast_font_16pt, *ast_font_24pt, *ast_font_32pt;
 static GameAsset *ast_buttons, *ast_blocks, *ast_frame;
 static GameAsset *ast_dragged, *ast_marked;
 
@@ -200,6 +200,7 @@ void LoadLevel(const char *str) {
 
 /* 게임 플레이 화면을 초기화한다. */
 void InitGameScreen(void) {
+    ast_font_16pt = GetGameAsset(0);
     ast_font_24pt = GetGameAsset(1);
     ast_font_32pt = GetGameAsset(2);
 
@@ -209,6 +210,8 @@ void InitGameScreen(void) {
 
     ast_dragged = GetGameAsset(6);
     ast_marked = GetGameAsset(7);
+
+    GuiSetFont(ast_font_16pt->data.font);
 
     // TODO: ...
     LoadLevel(LEVEL_00);
@@ -656,7 +659,7 @@ static void DrawSidebar(void) {
         }
 
         if (gui_settings_window_box_visible) {
-            // 'X' 버튼을 클릭할 경우, 현재 창을 닫는다.
+            // 'X' 버튼을 클릭했다면, 현재 창을 닫는다.
             if (DrawSettingsWindow()) gui_settings_window_box_visible = false;
         }
     }

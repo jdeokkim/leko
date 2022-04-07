@@ -22,16 +22,36 @@
 
 /* | `ui` 모듈 매크로 정의... | */
 
-#define GUI_WINDOW_BOX_WIDTH   640.0f
-#define GUI_WINDOW_BOX_HEIGHT  480.0f
+#define GUI_SETTINGS_WINDOW_BOX_WIDTH   480.0f
+#define GUI_SETTINGS_WINDOW_BOX_HEIGHT  360.0f
 
 /* | `ui` 모듈 상수... | */
 
 const Rectangle GUI_WINDOW_BOX_BOUNDS = {
-    0.5f * (SCREEN_WIDTH - GUI_WINDOW_BOX_WIDTH), 
-    0.5f * (SCREEN_HEIGHT - GUI_WINDOW_BOX_HEIGHT), 
-    GUI_WINDOW_BOX_WIDTH,
-    GUI_WINDOW_BOX_HEIGHT
+    0.5f * (SCREEN_WIDTH - GUI_SETTINGS_WINDOW_BOX_WIDTH), 
+    0.5f * (SCREEN_HEIGHT - GUI_SETTINGS_WINDOW_BOX_HEIGHT), 
+    GUI_SETTINGS_WINDOW_BOX_WIDTH,
+    GUI_SETTINGS_WINDOW_BOX_HEIGHT
+};
+
+const Rectangle GUI_SETTINGS_CHECK_BOX_01_BOUNDS = {
+    /* TODO: ... */
+};
+
+const Rectangle GUI_SETTINGS_CHECK_BOX_02_BOUNDS = {
+    /* TODO: ... */
+};
+
+const Rectangle GUI_SETTINGS_SLIDER_01_BOUNDS = {
+    /* TODO: ... */
+};
+
+const Rectangle GUI_SETTINGS_SLIDER_02_BOUNDS = {
+    /* TODO: ... */
+};
+
+const Rectangle GUI_SETTINGS_BUTTON_BOUNDS = {
+    /* TODO: ... */
 };
 
 /* | `ui` 모듈 함수... | */
@@ -66,8 +86,8 @@ bool DrawSettingsWindow(void) {
         GUI_WINDOW_BOX_BOUNDS,
         "\xED\x99\x98\xEA\xB2\xBD\x20\xEC\x84\xA4\xEC\xA0\x95"
     );
-
-    /* TODO: ... */
+    
+    // TODO: ...
 
     return result;
 }

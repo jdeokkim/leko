@@ -22,6 +22,7 @@
 #include <stdint.h>
 
 #include "raylib.h"
+#include "raygui.h"
 
 /* | 매크로 정의... | */
 
@@ -76,7 +77,6 @@ typedef struct GameAsset {
 typedef struct GameSettings {
     bool msaa_4x;      // 안티-에일리어싱 옵션 설정
     bool show_fps;     // 게임 화면에 FPS 표시 여부
-    int target_fps;    // 게임의 목표 FPS 설정
     struct {
         float master;
         float music;
@@ -142,6 +142,12 @@ bool UnloadGameAsset(int index);
 
 /* `index + 1`번째 게임 리소스 데이터를 반환한다. */
 GameAsset *GetGameAsset(int index);
+
+/* 게임의 환경 설정을 반환한다. */
+GameSettings GetGameSettings(void);
+
+/* 게임의 환경 설정을 `values`로 변경한다. */
+void SetGameSettings(GameSettings values);
 
 /* | `ui` 모듈 함수... | */
 

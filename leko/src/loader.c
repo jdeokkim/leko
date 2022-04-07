@@ -47,6 +47,8 @@ static GameAsset assets[] = {
     { .type = GAT_SOUND,   .path = "res/sounds/marked.wav"                     }
 };
 
+static GameSettings settings;
+
 static Rectangle progress_bar_inner_bounds = { .width = 764.0f, .height = 48.0f };
 static Rectangle progress_bar_outer_bounds = { .width = 778.0f, .height = 62.0f };
 
@@ -60,6 +62,9 @@ static size_t asset_index = 0, max_asset_count;
 static int result = 0;
 
 /* | `loader` 모듈 함수... | */
+
+/* 게임의 환경 설정을 불러온다. */
+static void LoadSettings(void);
 
 /* 리소스 파일 관련 오류 화면을 업데이트한다. */
 static void UpdateErrorScreen(void);
@@ -299,6 +304,28 @@ GameAsset *GetGameAsset(int index) {
     return (index >= 0 && index <= max_asset_count - 1)
         ? (GameAsset *) &assets[index] 
         : NULL;
+}
+
+/* 게임의 환경 설정을 반환한다. */
+GameSettings GetGameSettings(void) {
+    return settings;
+}
+
+/* 게임의 환경 설정을 `values`로 변경한다. */
+void SetGameSettings(GameSettings values) {
+    settings = values;
+}
+
+/* 게임의 환경 설정을 불러온다. */
+static void LoadSettings(void) {
+    /* TODO: ... */
+
+    settings.msaa_4x = true;
+    settings.show_fps = false;
+
+    settings.volume.master = 0.5f;
+    settings.volume.music = 0.5f;
+    settings.volume.sound = 0.5f;
 }
 
 /* 리소스 파일 관련 오류 화면을 업데이트한다. */
