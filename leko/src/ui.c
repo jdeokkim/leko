@@ -49,6 +49,20 @@
 #define GUI_SETTINGS_ELEMENT_04_X       (GUI_SETTINGS_WINDOW_BOX_X + 100.0f)
 #define GUI_SETTINGS_ELEMENT_04_Y       (GUI_SETTINGS_WINDOW_BOX_Y + 160.0f)
 
+#define GUI_SETTINGS_WINDOW_BOX_TEXT    "\xED\x99\x98\xEA\xB2\xBD\x20\xEC\x84\xA4\xEC\xA0\x95"
+
+#define GUI_SETTINGS_ELEMENT_01_TEXT    " \x46\x50\x53\x20\xED\x91\x9C\xEC\x8B\x9C\xED\x95\x98" \
+                                        "\xEA\xB8\xB0"
+
+#define GUI_SETTINGS_ELEMENT_02_TEXT   "\xEB\xA7\x88\xEC\x8A\xA4\xED\x84\xB0\x20\xEB\xB3\xBC\xEB" \
+                                       "\xA5\xA8 "
+
+#define GUI_SETTINGS_ELEMENT_03_TEXT   "\xEB\xB0\xB0\xEA\xB2\xBD\xEC\x9D\x8C\x20\xEB\xB3\xBC\xEB" \
+                                       "\xA5\xA8 "
+
+#define GUI_SETTINGS_ELEMENT_04_TEXT   "\xED\x9A\xA8\xEA\xB3\xBC\xEC\x9D\x8C\x20\xEB\xB3\xBC\xEB" \
+                                       "\xA5\xA8 "
+
 /* | `ui` 모듈 상수... | */
 
 const Rectangle GUI_WINDOW_BOX_BOUNDS = {
@@ -86,10 +100,6 @@ const Rectangle GUI_SETTINGS_SLIDER_03_BOUNDS = {
     GUI_SETTINGS_SLIDER_HEIGHT
 };
 
-const Rectangle GUI_SETTINGS_BUTTON_BOUNDS = {
-    /* TODO: ... */
-};
-
 /* | `ui` 모듈 함수... | */
 
 /* 그림 버튼을 화면에 그린다. */
@@ -100,8 +110,6 @@ int DrawImageButton(ImageButton button) {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) state = 1;
         else state = 2;
     }
-
-    if (GetGameState() != GST_NORMAL) state = 0;
 
     // 그림 버튼의 상태에 따라 모양을 변경한다.
     button.source.x = state * button.source.width;
@@ -122,25 +130,25 @@ int DrawImageButton(ImageButton button) {
 bool DrawSettingsWindow(void) {
     DrawRectangleRec(
         (Rectangle) { .width = SCREEN_WIDTH, .height = SCREEN_HEIGHT },
-        Fade(BLACK, 0.25f)
+        Fade(BLACK, 0.75f)
     );
 
     bool result = GuiWindowBox(
         GUI_WINDOW_BOX_BOUNDS,
-        "\xED\x99\x98\xEA\xB2\xBD\x20\xEC\x84\xA4\xEC\xA0\x95"
+        GUI_SETTINGS_WINDOW_BOX_TEXT
     );
 
     GameSettings *settings = GetGameSettings();
 
     settings->show_fps = GuiCheckBox(
         GUI_SETTINGS_CHECK_BOX_BOUNDS,
-        " \x46\x50\x53\x20\xED\x91\x9C\xEC\x8B\x9C\xED\x95\x98\xEA\xB8\xB0",
+        GUI_SETTINGS_ELEMENT_01_TEXT,
         settings->show_fps
     );
 
     settings->volume.master = GuiSlider(
         GUI_SETTINGS_SLIDER_01_BOUNDS,
-        "\xEB\xA7\x88\xEC\x8A\xA4\xED\x84\xB0\x20\xEB\xB3\xBC\xEB\xA5\xA8 ",
+        GUI_SETTINGS_ELEMENT_02_TEXT,
         NULL,
         settings->volume.master,
         GUI_SETTINGS_SLIDER_MIN_VALUE,
@@ -149,7 +157,7 @@ bool DrawSettingsWindow(void) {
 
     settings->volume.music = GuiSlider(
         GUI_SETTINGS_SLIDER_02_BOUNDS,
-        "\xEB\xB0\xB0\xEA\xB2\xBD\xEC\x9D\x8C\x20\xEB\xB3\xBC\xEB\xA5\xA8 ",
+        GUI_SETTINGS_ELEMENT_03_TEXT,
         NULL,
         settings->volume.music,
         GUI_SETTINGS_SLIDER_MIN_VALUE,
@@ -158,14 +166,12 @@ bool DrawSettingsWindow(void) {
 
     settings->volume.sound = GuiSlider(
         GUI_SETTINGS_SLIDER_03_BOUNDS,
-        "\xED\x9A\xA8\xEA\xB3\xBC\xEC\x9D\x8C\x20\xEB\xB3\xBC\xEB\xA5\xA8 ",
+        GUI_SETTINGS_ELEMENT_04_TEXT,
         NULL,
         settings->volume.sound,
         GUI_SETTINGS_SLIDER_MIN_VALUE,
         GUI_SETTINGS_SLIDER_MAX_VALUE
     );
-
-    SetGameState(result ? GST_NORMAL : GST_PAUSED);
 
     UpdateGameSettings();
 

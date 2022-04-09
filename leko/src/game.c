@@ -23,10 +23,27 @@
 
 /* | `game` 모듈 매크로 정의... | */
 
-#define GRAVITY_CONSTANT     600.0f
+#define GRAVITY_CONSTANT          600.0f
 
-#define MAX_ADJACENTS_COUNT  4
-#define MAX_SCORES_COUNT     2
+#define MAX_ADJACENTS_COUNT       4
+#define MAX_SCORES_COUNT          2
+
+#define SIDEBAR_STATS_01_TEXT    "\xEC\x8B\x9C\xEA\xB0\x84:  %02d:%02d"
+#define SIDEBAR_STATS_02_TEXT     "\xEC\xA0\x90\xEC\x88\x98: %05d"
+#define SIDEBAR_STATS_03_TEXT     "\xEC\xB5\x9C\xEA\xB3\xA0: %05d"
+
+#define SIDEBAR_PROGRESS_TEXT     "%02d / %02d"
+
+#define SIDEBAR_MENU_BUTTON_TEXT  "\xEB\xA9\x94\xEB\x89\xB4"
+
+#define GAME_MENU_BUTTON_01_TEXT  "\xEA\xB2\x8C\xEC\x9E\x84\x20\xEA\xB3\x84" \
+                                  "\xEC\x86\x8D\xED\x95\x98\xEA\xB8\xB0"
+
+#define GAME_MENU_BUTTON_02_TEXT  "\xEB\xA0\x88\xEB\xB2\xA8\x20\xEC\x84\xA0" \
+                                  "\xED\x83\x9D\x20\xED\x99\x94\xEB\xA9\xB4"
+
+#define GAME_MENU_BUTTON_03_TEXT  "\xED\x99\x98\xEA\xB2\xBD\x20\xEC\x84\xA4" \
+                                  "\xEC\xA0\x95"
 
 /* | `game` 모듈 자료형 정의... | */
 
@@ -66,11 +83,39 @@ const Rectangle LEVEL_BOUNDS = {
     .height = LEVEL_HEIGHT_IN_BLOCKS * BLOCK_SIZE
 };
 
-const Rectangle SIDEBAR_MENU_BUTTON_BOUNDS = {
-    .x = 70.0f,
+const Rectangle GAME_MENU_BUTTON_SOURCE = {
+    .x = 0.0f,
+    .y = 66.0f,
+    .width = 266.0f,
+    .height = 86.0f
+};
+
+const Rectangle GAME_MENU_BUTTON_01_DEST = {
+    .x = 392.0f,
+    .y = 264.0f,
+    .width = 266.0f,
+    .height = 86.0f
+};
+
+const Rectangle GAME_MENU_BUTTON_02_DEST = {
+    .x = 392.0f,
+    .y = 354.0f,
+    .width = 266.0f,
+    .height = 86.0f
+};
+
+const Rectangle GAME_MENU_BUTTON_03_DEST = {
+    .x = 392.0f,
+    .y = 444.0f,
+    .width = 266.0f,
+    .height = 86.0f
+};
+
+const Rectangle SIDEBAR_MENU_BUTTON_DEST = {
+    .x = 78.0f,
     .y = 640.0f,
-    .width = 160.0f,
-    .height = 76.0f
+    .width = 146.0f,
+    .height = 66.0f
 };
 
 const Rectangle SIDEBAR_PROG_BLOCK_BOUNDS[NORMAL_BLOCK_COUNT] = {
@@ -83,7 +128,7 @@ const Rectangle SIDEBAR_PROG_BLOCK_BOUNDS[NORMAL_BLOCK_COUNT] = {
     { 90.0f, 592.0f, 0.5f * BLOCK_SIZE, 0.5f * BLOCK_SIZE }
 };
 
-const Vector2 SIDEBAR_PROG_TEXT_POSITIONS[NORMAL_BLOCK_COUNT] = {
+const Vector2 SIDEBAR_PROGRESS_TEXT_POSITIONS[NORMAL_BLOCK_COUNT] = {
     { 133.0f, 294.0f },
     { 133.0f, 344.0f },
     { 133.0f, 394.0f },
@@ -93,7 +138,11 @@ const Vector2 SIDEBAR_PROG_TEXT_POSITIONS[NORMAL_BLOCK_COUNT] = {
     { 133.0f, 594.0f }
 };
 
-const Vector2 SIDEBAR_MENU_BUTTON_TEXT_OFFSET = { 150.0f, 668.0f };
+const Vector2 GAME_MENU_BUTTON_01_TEXT_OFFSET = { 436.0f, 286.0f };
+const Vector2 GAME_MENU_BUTTON_02_TEXT_OFFSET = { 436.0f, 376.0f };
+const Vector2 GAME_MENU_BUTTON_03_TEXT_OFFSET = { 466.0f, 466.0f };
+
+const Vector2 SIDEBAR_MENU_BUTTON_TEXT_OFFSET = { 132.0f, 658.0f };
 
 const Vector2 SIDEBAR_STATS_TEXT_POSITIONS[3] = {
     { 56.0f, 88.0f },
@@ -125,7 +174,7 @@ static Block *selected_block;
 
 static Matches matches;
 
-static bool gui_menu_window_box_visible, gui_settings_window_box_visible;
+static bool gui_menu_overlay_visible, gui_settings_window_box_visible;
 
 static double start_time, end_time;
 
@@ -238,6 +287,8 @@ void InitGameScreen(void) {
 
     GuiSetFont(ast_font_16pt->data.font);
 
+    SetGameState(GST_NORMAL);
+
     LoadLevel(current_level);
 }
 
@@ -256,8 +307,7 @@ void UpdateGameScreen(void) {
     DrawLevel();
     DrawSidebar();
 
-    if (settings->show_fps) 
-        DrawFPS(8, 8);
+    if (settings->show_fps) DrawFPS(8, 8);
 }
 
 /* 게임 플레이 화면을 종료한다. */
@@ -551,6 +601,14 @@ static bool IsLevelCompleted(void) {
 static void HandleKeyEvents(void) {
     // 현재 레벨을 초기화한다.
     if (IsKeyPressed(KEY_R)) LoadLevel(current_level);
+
+    // 게임 메뉴 창과 환경 설정 창을 닫는다.
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        SetGameState(GST_NORMAL);
+
+        gui_menu_overlay_visible = false;
+        gui_settings_window_box_visible = false;
+    }
 }
 
 /* 게임 플레이 화면에 현재 레벨을 그린다. */
@@ -570,8 +628,7 @@ static void DrawLevel(void) {
         progress[matches.type - 1] += (matches.count + 1);
         scores[0] += (matches.count + 1) * 100;
 
-        if (scores[1] < scores[0]) 
-            scores[1] = scores[0];
+        if (scores[1] < scores[0]) scores[1] = scores[0];
 
         matches.type = BLT_EMPTY;
         matches.count = 0;
@@ -586,7 +643,7 @@ static void DrawSidebar(void) {
         DrawTextEx(
             ast_font_32pt->data.font,
             TextFormat(
-                "\xEC\x8B\x9C\xEA\xB0\x84:  %02d:%02d",
+                SIDEBAR_STATS_01_TEXT,
                 (int) ((end_time - start_time) * INVERSE_SIXTY) % 60,
                 (int) (end_time - start_time) % 60
             ),
@@ -598,7 +655,7 @@ static void DrawSidebar(void) {
 
         DrawTextEx(
             ast_font_32pt->data.font,
-            TextFormat("\xEC\xA0\x90\xEC\x88\x98: %05d", scores[0]),
+            TextFormat(SIDEBAR_STATS_02_TEXT, scores[0]),
             SIDEBAR_STATS_TEXT_POSITIONS[1],
             ast_font_32pt->data.font.baseSize,
             1.0f,
@@ -607,7 +664,7 @@ static void DrawSidebar(void) {
 
         DrawTextEx(
             ast_font_32pt->data.font,
-            TextFormat("\xEC\xB5\x9C\xEA\xB3\xA0: %05d", scores[1]),
+            TextFormat(SIDEBAR_STATS_03_TEXT, scores[1]),
             SIDEBAR_STATS_TEXT_POSITIONS[2],
             ast_font_32pt->data.font.baseSize,
             1.0f,
@@ -634,11 +691,11 @@ static void DrawSidebar(void) {
             DrawTextEx(
                 ast_font_24pt->data.font,
                 TextFormat(
-                    "%02d / %02d", 
+                    SIDEBAR_PROGRESS_TEXT, 
                     level.goals[i] - progress[i], 
                     level.goals[i]
                 ),
-                SIDEBAR_PROG_TEXT_POSITIONS[i],
+                SIDEBAR_PROGRESS_TEXT_POSITIONS[i],
                 ast_font_24pt->data.font.baseSize,
                 1.0f,
                 BLACK
@@ -651,50 +708,105 @@ static void DrawSidebar(void) {
             (ImageButton) {
                 ast_buttons,
                 (Rectangle) {
-                    .width = SIDEBAR_MENU_BUTTON_BOUNDS.width,
-                    .height = SIDEBAR_MENU_BUTTON_BOUNDS.height
+                    .width = SIDEBAR_MENU_BUTTON_DEST.width,
+                    .height = SIDEBAR_MENU_BUTTON_DEST.height
                 },
-                SIDEBAR_MENU_BUTTON_BOUNDS
+                SIDEBAR_MENU_BUTTON_DEST
             }
-        );
-
-        const char *button_text = "\xEB\xA9\x94\xEB\x89\xB4";
-
-        Vector2 dimensions = MeasureTextEx(
-            ast_font_24pt->data.font,
-            button_text,
-            ast_font_24pt->data.font.baseSize,
-            2.0f
         );
 
         DrawTextEx(
             ast_font_24pt->data.font,
-            button_text,
-            (Vector2) {
-                SIDEBAR_MENU_BUTTON_TEXT_OFFSET.x - 0.5f * dimensions.x,
-                SIDEBAR_MENU_BUTTON_TEXT_OFFSET.y - 0.5f * dimensions.y
-            },
+            SIDEBAR_MENU_BUTTON_TEXT,
+            SIDEBAR_MENU_BUTTON_TEXT_OFFSET,
             ast_font_24pt->data.font.baseSize,
             2.0f,
             WHITE
         );
 
         // '메뉴' 버튼을 클릭했을 때에 동작을 지정한다.
-        if (button_state == 2) {
-            // gui_menu_window_box_visible = true;
+        if (GetGameState() == GST_NORMAL && button_state == 2) {
+            SetGameState(GST_PAUSED);
+
+            gui_menu_overlay_visible = true;
+        }
+    }
+
+    if (gui_menu_overlay_visible) {
+        DrawRectangleRec(
+            (Rectangle) { .width = SCREEN_WIDTH, .height = SCREEN_HEIGHT },
+            Fade(BLACK, 0.75f)
+        );
+
+        int button_01_state = DrawImageButton(
+            (ImageButton) {
+                ast_buttons,
+                GAME_MENU_BUTTON_SOURCE,
+                GAME_MENU_BUTTON_01_DEST
+            }
+        );
+
+        DrawTextEx(
+            ast_font_32pt->data.font,
+            GAME_MENU_BUTTON_01_TEXT,
+            GAME_MENU_BUTTON_01_TEXT_OFFSET,
+            ast_font_32pt->data.font.baseSize,
+            2.0f,
+            WHITE
+        );
+
+        int button_02_state = DrawImageButton(
+            (ImageButton) {
+                ast_buttons,
+                GAME_MENU_BUTTON_SOURCE,
+                GAME_MENU_BUTTON_02_DEST
+            }
+        );
+
+        DrawTextEx(
+            ast_font_32pt->data.font,
+            GAME_MENU_BUTTON_02_TEXT,
+            GAME_MENU_BUTTON_02_TEXT_OFFSET,
+            ast_font_32pt->data.font.baseSize,
+            2.0f,
+            WHITE
+        );
+
+        int button_03_state = DrawImageButton(
+            (ImageButton) {
+                ast_buttons,
+                GAME_MENU_BUTTON_SOURCE,
+                GAME_MENU_BUTTON_03_DEST
+            }
+        );
+
+        DrawTextEx(
+            ast_font_32pt->data.font,
+            GAME_MENU_BUTTON_03_TEXT,
+            GAME_MENU_BUTTON_03_TEXT_OFFSET,
+            ast_font_32pt->data.font.baseSize,
+            2.0f,
+            WHITE
+        );
+
+        if (button_01_state == 2) {
+            SetGameState(GST_NORMAL);
+
+            gui_menu_overlay_visible = false;
+        } else if (button_02_state == 2) {
+            result = 1;
+        } else if (button_03_state == 2) {
+            gui_menu_overlay_visible = false;
             gui_settings_window_box_visible = true;
         }
     }
 
-    {
-        if (gui_menu_window_box_visible) {
-            /* TODO: ... */
-        }
+    if (gui_settings_window_box_visible) {
+        // 'X' 버튼을 클릭했다면, 현재 창을 닫는다.
+        if (DrawSettingsWindow()) {
+            SetGameState(GST_NORMAL);
 
-        if (gui_settings_window_box_visible) {
-            // 'X' 버튼을 클릭했다면, 현재 창을 닫는다.
-            if (DrawSettingsWindow()) 
-                gui_settings_window_box_visible = false;
+            gui_settings_window_box_visible = false;
         }
     }
 }

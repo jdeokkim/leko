@@ -59,7 +59,7 @@ void UpdateScreen(void) {
 
     switch (current_screen) {
         case GSC_INIT:
-            // SetExitKey(KEY_NULL);
+            SetExitKey(KEY_NULL);
 
             LoadScreen(GSC_LOADING);
 
@@ -88,12 +88,18 @@ void UpdateScreen(void) {
 
             break;
 
+        case GSC_SELECT:
+            UpdateSelectScreen();
+
+            if (FinishSelectScreen())
+                LoadScreen(GSC_GAME);
+
+            break;
+
         case GSC_GAME:
             UpdateGameScreen();
 
-            if (FinishGameScreen() == 1)
-                LoadScreen(GSC_TITLE);
-            else if (FinishGameScreen() == 2)
+            if (FinishGameScreen())
                 LoadScreen(GSC_SELECT);
 
             break;

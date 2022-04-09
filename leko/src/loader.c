@@ -340,7 +340,7 @@ void UpdateGameSettings(void) {
 static void LoadSettings(void) {
     settings.show_fps = false;
 
-    settings.volume.master = 0.5f;
+    settings.volume.master = 1.0f;
     settings.volume.music = 0.5f;
     settings.volume.sound = 0.5f;
 
