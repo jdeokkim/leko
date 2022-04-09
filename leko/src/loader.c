@@ -47,6 +47,7 @@ static GameAsset assets[] = {
     { .type = GAT_SOUND,   .path = "res/sounds/marked.wav"                     }
 };
 
+static GameState current_state;
 static GameSettings settings;
 
 static Rectangle progress_bar_inner_bounds = { .width = 764.0f, .height = 48.0f };
@@ -221,6 +222,8 @@ int FinishLoadingScreen(void) {
         UnloadTexture(tx_loading_message);
 
         UnloadFont(fnt_neodgm_min_32pt);
+
+        LoadSettings();
     }
 
     return result;
@@ -306,21 +309,24 @@ GameAsset *GetGameAsset(int index) {
         : NULL;
 }
 
-/* 게임의 환경 설정을 반환한다. */
-GameSettings GetGameSettings(void) {
-    return settings;
+/* 게임의 현재 상태를 반환한다. */
+GameState GetGameState(void) {
+    return current_state;
 }
 
-/* 게임의 환경 설정을 `values`로 변경한다. */
-void SetGameSettings(GameSettings values) {
-    settings = values;
+/* 게임의 환경 설정을 반환한다. */
+GameSettings *GetGameSettings(void) {
+    return &settings;
+}
+/* 게임의 현재 상태를 `state`로 변경한다. */
+void SetGameState(GameState state) {
+    current_state = state;
 }
 
 /* 게임의 환경 설정을 불러온다. */
 static void LoadSettings(void) {
     /* TODO: ... */
 
-    settings.msaa_4x = true;
     settings.show_fps = false;
 
     settings.volume.master = 0.5f;

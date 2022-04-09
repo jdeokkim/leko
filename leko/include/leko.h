@@ -60,6 +60,12 @@ typedef enum GameScreen {
     GSC_GAME      // 게임 플레이 화면
 } GameScreen;
 
+/* 게임의 현재 상태를 나타내는 열거형. */
+typedef enum GameState {
+    GST_NORMAL,
+    GST_PAUSED
+} GameState;
+
 /* 게임의 리소스를 나타내는 구조체. */
 typedef struct GameAsset {
     bool loaded;            // 게임 리소스의 로딩 여부
@@ -75,7 +81,6 @@ typedef struct GameAsset {
 
 /* 게임의 환경 설정을 나타내는 구조체. */
 typedef struct GameSettings {
-    bool msaa_4x;      // 안티-에일리어싱 옵션 설정
     bool show_fps;     // 게임 화면에 FPS 표시 여부
     struct {
         float master;
@@ -143,11 +148,14 @@ bool UnloadGameAsset(int index);
 /* `index + 1`번째 게임 리소스 데이터를 반환한다. */
 GameAsset *GetGameAsset(int index);
 
-/* 게임의 환경 설정을 반환한다. */
-GameSettings GetGameSettings(void);
+/* 게임의 현재 상태를 반환한다. */
+GameState GetGameState(void);
 
-/* 게임의 환경 설정을 `values`로 변경한다. */
-void SetGameSettings(GameSettings values);
+/* 게임의 환경 설정을 반환한다. */
+GameSettings *GetGameSettings(void);
+
+/* 게임의 현재 상태를 `state`로 변경한다. */
+void SetGameState(GameState state);
 
 /* | `ui` 모듈 함수... | */
 

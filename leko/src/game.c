@@ -116,6 +116,8 @@ static GameAsset *ast_font_16pt, *ast_font_24pt, *ast_font_32pt;
 static GameAsset *ast_buttons, *ast_blocks, *ast_frame;
 static GameAsset *ast_dragged, *ast_marked;
 
+static GameSettings *settings;
+
 static Level level;
 
 static Block *adjacents[MAX_ADJACENTS_COUNT];
@@ -161,9 +163,6 @@ static int GetMouseDirection(Block *block);
 
 /* 현재 레벨의 클리어 여부를 확인한다. */
 static bool IsLevelCompleted(void);
-
-/* 게임의 상태를 변경한다. */
-static void SetGameState(bool state);
 
 /* 게임 플레이 화면에 현재 레벨을 그린다. */
 static void DrawLevel(void);
@@ -211,6 +210,8 @@ void InitGameScreen(void) {
     ast_dragged = GetGameAsset(6);
     ast_marked = GetGameAsset(7);
 
+    settings = GetGameSettings();
+
     GuiSetFont(ast_font_16pt->data.font);
 
     // TODO: ...
@@ -229,6 +230,9 @@ void UpdateGameScreen(void) {
 
     DrawLevel();
     DrawSidebar();
+
+    if (settings->show_fps) 
+        DrawFPS(8, 8);
 }
 
 /* 게임 플레이 화면을 종료한다. */
@@ -271,6 +275,8 @@ static void DrawBlock(Block *block) {
         block->position,
         WHITE
     );
+
+    if (GetGameState() != GST_NORMAL) return;
 
     if (CanBeDragged(block)) {
         DrawTextureRec(
@@ -516,18 +522,14 @@ static bool IsLevelCompleted(void) {
     return true;
 }
 
-/* 게임의 상태를 변경한다. */
-static void SetGameState(bool state) {
-    
-}
-
 /* 게임 플레이 화면에 현재 레벨을 그린다. */
 static void DrawLevel(void) {
     for (int y = 0; y < LEVEL_HEIGHT_IN_BLOCKS; y++) {
         for (int x = 0; x < LEVEL_WIDTH_IN_BLOCKS; x++) {
-            UpdateBlock(&level.blocks[y][x]);
+            if (GetGameState() == GST_NORMAL) 
+                UpdateBlock(&level.blocks[y][x]);
 
-            if (level.blocks[y][x].state != BLS_MARKED)
+            if (level.blocks[y][x].state != BLS_MARKED) 
                 DrawBlock(&level.blocks[y][x]);
         }
     }
@@ -537,7 +539,7 @@ static void DrawLevel(void) {
         progress[matches.type - 1] += (matches.count + 1);
         scores[0] += (matches.count + 1) * 100;
 
-        if (scores[1] < scores[0])
+        if (scores[1] < scores[0]) 
             scores[1] = scores[0];
 
         matches.type = BLT_EMPTY;
@@ -660,7 +662,8 @@ static void DrawSidebar(void) {
 
         if (gui_settings_window_box_visible) {
             // 'X' 버튼을 클릭했다면, 현재 창을 닫는다.
-            if (DrawSettingsWindow()) gui_settings_window_box_visible = false;
+            if (DrawSettingsWindow()) 
+                gui_settings_window_box_visible = false;
         }
     }
 }
