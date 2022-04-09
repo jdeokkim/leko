@@ -167,5 +167,7 @@ bool DrawSettingsWindow(void) {
 
     SetGameState(result ? GST_NORMAL : GST_PAUSED);
 
+    UpdateGameSettings();
+
     return result;
 }

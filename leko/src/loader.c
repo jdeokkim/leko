@@ -323,15 +323,28 @@ void SetGameState(GameState state) {
     current_state = state;
 }
 
+/* 게임의 환경 설정을 업데이트한다. */
+void UpdateGameSettings(void) {
+    for (int i = 0; i < max_asset_count; i++) {
+        if (assets[i].type == GAT_MUSIC) 
+            SetMusicVolume(assets[i].data.music, settings.volume.music);
+        else if (assets[i].type == GAT_SOUND)
+            SetSoundVolume(assets[i].data.sound, settings.volume.sound);
+        else continue;
+    }
+
+    SetMasterVolume(settings.volume.master);
+}
+
 /* 게임의 환경 설정을 불러온다. */
 static void LoadSettings(void) {
-    /* TODO: ... */
-
     settings.show_fps = false;
 
     settings.volume.master = 0.5f;
     settings.volume.music = 0.5f;
     settings.volume.sound = 0.5f;
+
+    UpdateGameSettings();
 }
 
 /* 리소스 파일 관련 오류 화면을 업데이트한다. */

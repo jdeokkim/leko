@@ -157,6 +157,9 @@ GameSettings *GetGameSettings(void);
 /* 게임의 현재 상태를 `state`로 변경한다. */
 void SetGameState(GameState state);
 
+/* 게임의 환경 설정을 업데이트한다. */
+void UpdateGameSettings(void);
+
 /* | `ui` 모듈 함수... | */
 
 /* 그림 버튼을 화면에 그린다. */
