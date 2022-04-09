@@ -125,9 +125,11 @@ static Block *selected_block;
 
 static Matches matches;
 
+static bool gui_menu_window_box_visible, gui_settings_window_box_visible;
+
 static double start_time, end_time;
 
-static bool gui_menu_window_box_visible, gui_settings_window_box_visible;
+static char *current_level = NULL;
 
 static int progress[NORMAL_BLOCK_COUNT], scores[MAX_SCORES_COUNT];
 static int result, state;
@@ -164,6 +166,9 @@ static int GetMouseDirection(Block *block);
 /* 현재 레벨의 클리어 여부를 확인한다. */
 static bool IsLevelCompleted(void);
 
+/* 사용자의 키보드 입력을 처리한다. */
+static void HandleKeyEvents(void);
+
 /* 게임 플레이 화면에 현재 레벨을 그린다. */
 static void DrawLevel(void);
 
@@ -177,6 +182,15 @@ void LoadLevel(const char *str) {
     strncpy(buffer, str, MAX_LEVEL_STR_LENGTH);
 
     token = strtok(buffer, ",");
+
+    // 현재 레벨의 블록 배열을 초기화한다.
+    for (int y = 0; y < LEVEL_HEIGHT_IN_BLOCKS; y++)
+        for (int x = 0; x < LEVEL_WIDTH_IN_BLOCKS; x++)
+            level.blocks[y][x] = EMPTY_BLOCK;
+
+    // 현재 레벨의 클리어 목표를 초기화한다.
+    for (int i = 0; i < NORMAL_BLOCK_COUNT; i++)
+        level.goals[i] = 0;
 
     // 블록의 종류를 하나씩 읽는다.
     for (int i = 0; token != NULL; i++) {
@@ -195,6 +209,13 @@ void LoadLevel(const char *str) {
 
     // 게임 시작 시간을 설정한다.
     start_time = GetTime();
+
+    // 게임의 진행 상황을 초기화한다.
+    for (int i = 0; i < NORMAL_BLOCK_COUNT; i++)
+        progress[i] = 0;
+
+    // 현재 점수를 초기화한다.
+    scores[0] = 0;
 }
 
 /* 게임 플레이 화면을 초기화한다. */
@@ -212,14 +233,18 @@ void InitGameScreen(void) {
 
     settings = GetGameSettings();
 
+    // TODO: ...
+    current_level = (char *) LEVEL_00;
+
     GuiSetFont(ast_font_16pt->data.font);
 
-    // TODO: ...
-    LoadLevel(LEVEL_00);
+    LoadLevel(current_level);
 }
 
 /* 게임 플레이 화면을 업데이트한다. */
 void UpdateGameScreen(void) {
+    HandleKeyEvents();
+
     ClearBackground(BLACK);
 
     DrawTextureV(
@@ -520,6 +545,12 @@ static bool IsLevelCompleted(void) {
         if (progress[i] > 0) return false;
 
     return true;
+}
+
+/* 사용자의 키보드 입력을 처리한다. */
+static void HandleKeyEvents(void) {
+    // 현재 레벨을 초기화한다.
+    if (IsKeyPressed(KEY_R)) LoadLevel(current_level);
 }
 
 /* 게임 플레이 화면에 현재 레벨을 그린다. */
