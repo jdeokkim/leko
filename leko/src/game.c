@@ -231,9 +231,9 @@ static void DrawSidebar(void);
 
 /* 레벨 문자열 `str`을 통해 레벨을 불러온다. */
 void LoadLevel(const char *str) {
-    static char buffer[MAX_LEVEL_STR_LENGTH], *token;
+    static char buffer[MAX_LVSTR_LENGTH], *token;
 
-    strncpy(buffer, str, MAX_LEVEL_STR_LENGTH);
+    strncpy(buffer, str, MAX_LVSTR_LENGTH);
 
     token = strtok(buffer, ",");
 
